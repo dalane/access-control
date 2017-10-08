@@ -1,0 +1,27 @@
+{
+  "name": "@dalane/access-control",
+  "version": "0.0.1",
+  "description": "An attribute based access control system for node applications",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/nyc node ./test report --reporter=html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dalane/access-control.git"
+  },
+  "author": "Dallas Ewing <developers@dalane.io>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dalane/access-control/issues"
+  },
+  "homepage": "https://github.com/dalane/access-control#readme",
+  "dependencies": {
+    "url-pattern": "^1.0.3"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "nyc": "^11.2.1"
+  }
+}
