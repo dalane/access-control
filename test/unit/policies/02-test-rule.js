@@ -1,7 +1,7 @@
 'use strict';
 
-const Rule = require('../../../built/policies/rule');
-const {AnyOfSpecification, IsEqualSpecification, IsTrueSpecification} = require('../../../src/policies/specifications');
+const {Rule} = require('../../../build/policies/rule');
+const {AnyOfSpecification, IsEqualSpecification, IsTrueSpecification} = require('../../../build/policies/specifications');
 const {expect} = require('chai');
 const td = require('testdouble');
 
@@ -9,7 +9,7 @@ describe('rule object', () => {
   it('requires an anyOf or allOf specification in the constructor', () => {
     let result;
     try {
-      let sut = new Rule();
+      let sut = new Rule.default();
     } catch (error) {
       result = error.name;
     }
@@ -18,8 +18,6 @@ describe('rule object', () => {
   it('creates a rule without errors', () => {
     let didFail = false;
     let anyOfSpecification = new AnyOfSpecification();
-    // anyOfSpecification.push(new IsEqualSpecification('test.value', 'test-text'));
-    // anyOfSpecification.push(new IsEqualSpecification('test.text', '${test.lookup}'));
     try {
       let sut = new Rule(anyOfSpecification);
     } catch (error) {

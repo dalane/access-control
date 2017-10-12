@@ -1,7 +1,7 @@
 'use strict';
 
-const SpecificationFactory = require('../../../built/policies/specifications/factory');
-const specifications = require('../../../built/policies/specifications');
+const specifications = require('../../../build/policies/specifications');
+const {SpecificationFactory} = require('../../../build/policies/specifications/specification-factory');
 const {expect} = require('chai');
 const {Map} = require('immutable');
 
