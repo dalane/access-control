@@ -1,7 +1,7 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.0.2",
-  "description": "An attribute based access control system for node applications",
+  "version": "0.0.3",
+  "description": "An attribute based access control system for javascript applications",
   "main": "src/index.js",
   "scripts": {
     "test": "./node_modules/.bin/nyc node ./test report --reporter=html"

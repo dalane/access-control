@@ -4,6 +4,8 @@ const {Rule} = require('../../../build/policies/rule');
 const {AnyOfSpecification, IsEqualSpecification, IsTrueSpecification} = require('../../../build/policies/specifications');
 const {expect} = require('chai');
 const td = require('testdouble');
+const {AccessRequestMock} = require('../helpers');
+const {fromJS} = require('immutable');
 
 describe('rule object', () => {
   it('requires an anyOf or allOf specification in the constructor', () => {
@@ -46,5 +48,27 @@ describe('rule object', () => {
     } else {
       expect(didFail).to.equal(false);
     }
+  });
+  it('Returns an isSatisfied true response', () => {
+    let anyOfSpecification = new AnyOfSpecification();
+    anyOfSpecification.push(new IsEqualSpecification('test.value', 'test-expect'));
+    let sut = new Rule(anyOfSpecification);
+    let accessRequest = new AccessRequestMock(fromJS({
+      test: {
+        value: 'test-expect'
+      }
+    }));
+    expect(sut.isSatisfiedBy(accessRequest)).to.equal(true);
+  });
+  it('Returns an isSatisfied false response', () => {
+    let anyOfSpecification = new AnyOfSpecification();
+    anyOfSpecification.push(new IsEqualSpecification('test.value', 'test-expect'));
+    let sut = new Rule(anyOfSpecification);
+    let accessRequest = new AccessRequestMock(fromJS({
+      test: {
+        value: 'no-match'
+      }
+    }));
+    expect(sut.isSatisfiedBy(accessRequest)).to.equal(false);
   });
 });

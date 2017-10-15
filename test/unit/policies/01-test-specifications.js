@@ -3,16 +3,8 @@
 const specifications = require('../../../build/policies/specifications');
 const {SpecificationFactory} = require('../../../build/policies/specifications/specification-factory');
 const {expect} = require('chai');
-const {fromJS, Map} = require('immutable');
-
-class AccessRequestMock {
-  constructor(body) {
-    this._body = body;
-  }
-  getPath(path) {
-    return this._body.getIn(path.split('.'));
-  }
-}
+const {fromJS} = require('immutable');
+const {AccessRequestMock} = require('../helpers');
 
 describe('specifications', () => {
   describe('modules', () => {
@@ -415,10 +407,6 @@ describe('specifications', () => {
             isAdmin: true
           }
         }));
-        // accessRequest.set('subject', new Map());
-        // accessRequest.get('subject').set('name', 'Jill Smith');
-        // accessRequest.get('subject').set('age', 17);
-        // accessRequest.get('subject').set('isAdmin', true);
         expect(isEqual_sut.isSatisfiedBy(accessRequest)).to.equal(false);
         expect(isTrue_sut.isSatisfiedBy(accessRequest)).to.equal(true);
         expect(isGreaterThanOrEqual_sut.isSatisfiedBy(accessRequest)).to.equal(false);
@@ -437,10 +425,6 @@ describe('specifications', () => {
             owner: 'example@example.com'
           }
         }));
-        // accessRequest.set('subject', new Map());
-        // accessRequest.set('resource', new Map());
-        // accessRequest.get('subject').set('email', 'example@example.com');
-        // accessRequest.get('resource').set('owner', 'example@example.com');
         expect(sut.isSatisfiedBy(accessRequest)).to.equal(true);
         expect(sut.expected).to.equal('${resource.owner}');
         expect(sut.expectedIsAttribute).to.equal(true);
@@ -457,10 +441,6 @@ describe('specifications', () => {
             owner: 'example@example.com'
           }
         }));
-        // accessRequest.set('subject', new Map());
-        // accessRequest.set('resource', new Map());
-        // accessRequest.get('subject').set('email', 'not-an-example@example.com');
-        // accessRequest.get('resource').set('owner', 'example@example.com');
         expect(sut.isSatisfiedBy(accessRequest)).to.equal(false);
       });
     });
@@ -498,10 +478,6 @@ describe('specifications', () => {
           email: 'example@example.com'
         }
       }));
-      // isFirstSuccessfulRequest.set('subject', new Map());
-      // isFirstSuccessfulRequest.get('subject').set('isAdmin', true);
-      // isFirstSuccessfulRequest.get('subject').set('age', 18);
-      // isFirstSuccessfulRequest.get('subject').set('email', 'example@example.com');
       expect(specification.isSatisfiedBy(isFirstSuccessfulRequest)).to.equal(true);
       let isSecondSuccessfulRequest = new AccessRequestMock(fromJS({
         subject: {
@@ -510,10 +486,6 @@ describe('specifications', () => {
           email: 'example@example.com'
         }
       }));
-      // isSecondSuccessfulRequest.set('subject', new Map());
-      // isSecondSuccessfulRequest.get('subject').set('isAdmin', false); // will fail in the anyOf
-      // isSecondSuccessfulRequest.get('subject').set('age', 18);
-      // isSecondSuccessfulRequest.get('subject').set('email', 'example@example.com');
       expect(specification.isSatisfiedBy(isSecondSuccessfulRequest)).to.equal(true);
       let isNotSuccessfulRequest = new AccessRequestMock(fromJS({
         subject: {
@@ -522,10 +494,6 @@ describe('specifications', () => {
           email: 'example@example.com'
         }
       }));
-      // isNotSuccessfulRequest.set('subject', new Map());
-      // isNotSuccessfulRequest.get('subject').set('isAdmin', false); // will fail in the anyOf
-      // isNotSuccessfulRequest.get('subject').set('age', 17); // will fail in the allOff which will also fail in the anyOf
-      // isNotSuccessfulRequest.get('subject').set('email', 'example@example.com');
       expect(specification.isSatisfiedBy(isNotSuccessfulRequest)).to.equal(false);
     });
     it('creates compound specification with isEqual specification', () => {
