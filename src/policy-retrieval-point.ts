@@ -1,7 +1,8 @@
 import {PolicyFactory} from './policies/policy-factory';
 import {PolicySet} from './policies/policy-set';
+import {Policy} from 'policies/policy';
 
-export default class PolicyRetrievalPoint {
+export class PolicyRetrievalPoint {
   private _repository;
   private _policyFactory;
   private _cache;
@@ -15,13 +16,13 @@ export default class PolicyRetrievalPoint {
    * @param  {Object} query [description]
    * @return {PolicySet}       [description]
    */
-  retrievePolicySet(query) {
+  findPolicies(query): PolicySet {
     let policySet = new PolicySet();
     // iterate through policies and filter for policies that match the query...
     this._cache.forEach(policy => {
       // - does the query.action.method match?
       // - does the query.resource.path match?
-      let match = this.isMatch(policy, query.action, query.resource, query.principal);
+      let match = this._isMatch(policy, query.action, query.resource, query.principal);
       // push any matching policies into the policySet
       if (match !== null) policySet.add(policy, match);
     });
@@ -32,7 +33,7 @@ export default class PolicyRetrievalPoint {
    * Clears the cache and recaches all policies from the repository
    * @return {Promise} A promise that resolves when completed
    */
-  refresh() {
+  refresh(): void {
     if (!this._repository.isConnected) {
       throw new Error('Repository is not connected');
     }
@@ -44,7 +45,7 @@ export default class PolicyRetrievalPoint {
       return true;
     });
   }
-  isMatch(policy, queryAction, queryResource, queryPrincipal) {
+  private _isMatch(policy:Policy, queryAction:string, queryResource:string, queryPrincipal:string) {
     let isActionMatch = (policy.action = '*' || policy.permittedActions.includes(queryAction));
     if (isActionMatch) {
       return (policy.resource.isMatch(queryResource) !== null);

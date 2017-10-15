@@ -4,6 +4,9 @@ class PolicyInformationPoint {
     constructor(store) {
         this._store = store;
     }
+    findValue(accessRequest, attribute, dataType, issuer) {
+        return null;
+    }
 }
 exports.PolicyInformationPoint = PolicyInformationPoint;
 ;

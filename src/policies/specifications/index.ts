@@ -1,4 +1,8 @@
-import {AbstractLogicSpecification} from './abstract-logic-specification';
+/**
+ * Collect all specifications into one place and re-export
+ */
+
+import {AbstractCollectionSpecification} from './abstract-collection-specification';
 import {AbstractSpecification} from './abstract-specification';
 import {AllOfSpecification} from './all-of-specification';
 import {AnyOfSpecification} from './any-of-specification';
@@ -17,7 +21,7 @@ import {IsNullSpecification} from './is-null-specification';
 import {IsPresentSpecification} from './is-present-specification';
 import {IsTrueSpecification} from './is-true-specification';
 
-export {AbstractLogicSpecification};
+export {AbstractCollectionSpecification};
 export {AbstractSpecification};
 export {AllOfSpecification};
 export {AnyOfSpecification};

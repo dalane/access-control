@@ -1,6 +1,6 @@
-import {AbstractLogicSpecification} from './abstract-logic-specification';
+import {AbstractCollectionSpecification} from './abstract-collection-specification';
 
-export class AllOfSpecification extends AbstractLogicSpecification {
+export class AllOfSpecification extends AbstractCollectionSpecification {
   isSatisfiedBy(accessRequest) {
     if (this.length === 0) {
       return true;

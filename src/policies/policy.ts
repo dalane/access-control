@@ -2,6 +2,7 @@ import * as specifications from './specifications';
 import {List} from 'immutable';
 import {Rule} from './rule';
 import {Resource} from './resource';
+import {AccessRequest} from 'access-request/access-request';
 
 export class Policy {
   private _id;
@@ -92,25 +93,29 @@ export class Policy {
   get permittedActions() {
     return this._permittedActions;
   }
-  isSatisfiedBy(accessRequest) {
-    let isActionMatch = (this.action = '*' || this.permittedActions.includes(accessRequest.action.method));
+  isSatisfiedBy(accessRequest: AccessRequest) {
+    let isActionMatch = (this.action = '*' || this.permittedActions.includes(accessRequest.body.getIn('action.method'.split('.'))));
     if (isActionMatch) {
       // TODO check for the principal first, don't need rules for a principal
       // rematch the access request resource uri to the resource so that we can
       // get the parameters
-      let uriMatch = this._resource.isMatch(accessRequest.resource.uri);
+      let uriMatch = this._resource.isMatch(accessRequest.body.getIn('resource.uri'.split('.')));
       // if uriMatch is null then the resource uri in the request did not match
       // the resource uri of the policy. This should already have been filtered
       // for but checking again just in case
       if (uriMatch === null) return true;
       // make an immutable copy of the access request
-      let request = JSON.parse(JSON.stringify(accessRequest));
+      let request = JSON.parse(JSON.stringify(accessRequest), (key, value) => {
+        if (typeof value === 'object') {
+
+        }
+      });
       // add the uri parameters to the request
       request.resource.params = uriMatch;
       // check if the access request passes the policy rule...
       return this._rule.isSatisfiedBy(accessRequest);
     } else {
-      return true;
+      return false;
     }
   }
   get attributes() {

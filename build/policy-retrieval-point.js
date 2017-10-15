@@ -12,13 +12,13 @@ class PolicyRetrievalPoint {
      * @param  {Object} query [description]
      * @return {PolicySet}       [description]
      */
-    retrievePolicySet(query) {
+    findPolicies(query) {
         let policySet = new policy_set_1.PolicySet();
         // iterate through policies and filter for policies that match the query...
         this._cache.forEach(policy => {
             // - does the query.action.method match?
             // - does the query.resource.path match?
-            let match = this.isMatch(policy, query.action, query.resource, query.principal);
+            let match = this._isMatch(policy, query.action, query.resource, query.principal);
             // push any matching policies into the policySet
             if (match !== null)
                 policySet.add(policy, match);
@@ -42,7 +42,7 @@ class PolicyRetrievalPoint {
             return true;
         });
     }
-    isMatch(policy, queryAction, queryResource, queryPrincipal) {
+    _isMatch(policy, queryAction, queryResource, queryPrincipal) {
         let isActionMatch = (policy.action = '*' || policy.permittedActions.includes(queryAction));
         if (isActionMatch) {
             return (policy.resource.isMatch(queryResource) !== null);
@@ -52,4 +52,4 @@ class PolicyRetrievalPoint {
         }
     }
 }
-exports.default = PolicyRetrievalPoint;
+exports.PolicyRetrievalPoint = PolicyRetrievalPoint;

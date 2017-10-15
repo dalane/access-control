@@ -6,7 +6,8 @@
     "allowJs": false,
     "target": "es6",
     "noImplicitAny": false,
-    "sourceMap": false
+    "sourceMap": false,
+    "baseUrl": "./src"
   },
   "include": [
     "./src/**/*"

@@ -33,7 +33,7 @@ class PolicyFactory {
         return new resource_1.Resource(uri);
     }
     _createRule(plainObjectRules) {
-        return new rule_1.Rule(this._specificationFactory.build(plainObjectRules));
+        return new rule_1.Rule(this._specificationFactory.create(plainObjectRules));
     }
 }
 exports.PolicyFactory = PolicyFactory;

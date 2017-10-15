@@ -6,6 +6,10 @@ export class IsNotTrueSpecification extends AbstractSpecification {
   }
   isSatisfiedBy(accessRequest) {
     let actualValue = this._getActualValue(accessRequest);
-    return (actualValue !== true);
+    if (typeof actualValue == 'boolean') {
+      return (actualValue !== true);
+    } else {
+      return false;
+    }
   }
 }

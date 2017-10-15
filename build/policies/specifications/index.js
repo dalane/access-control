@@ -1,7 +1,10 @@
 "use strict";
+/**
+ * Collect all specifications into one place and re-export
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
-const abstract_logic_specification_1 = require("./abstract-logic-specification");
-exports.AbstractLogicSpecification = abstract_logic_specification_1.AbstractLogicSpecification;
+const abstract_collection_specification_1 = require("./abstract-collection-specification");
+exports.AbstractCollectionSpecification = abstract_collection_specification_1.AbstractCollectionSpecification;
 const abstract_specification_1 = require("./abstract-specification");
 exports.AbstractSpecification = abstract_specification_1.AbstractSpecification;
 const all_of_specification_1 = require("./all-of-specification");

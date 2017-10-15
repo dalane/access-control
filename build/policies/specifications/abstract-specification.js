@@ -80,7 +80,7 @@ class AbstractSpecification {
      * @return {*}               The value found at the attribute path in the access request
      */
     _getActualValue(accessRequest) {
-        return this._getValueFromAccessRequest(accessRequest, this._attributePathSegments);
+        return accessRequest.getPath(this._attributePath);
     }
     /**
      * An internal function used by the specification to extract the expected value. It will return the expected value unless it's another attribute then it will extract the expected value from the acces request.
@@ -88,26 +88,7 @@ class AbstractSpecification {
      * @return {*}               The expected value as set in the constructor or a value extracted from the access request
      */
     _getExpectedValue(accessRequest) {
-        return (this._expectedIsAttribute) ? this._getValueFromAccessRequest(accessRequest, this._expectedAttributePathSegments) : this._expectedValue;
-    }
-    /**
-     * An internal function to extract a value from the access request located at the specified 'path.to.attribute'
-     * @param  {AccessRequest} accessRequest The access request created by the PEP
-     * @param  {[String]} segments      The path to the attribute already split into segments
-     * @return {*}
-     */
-    _getValueFromAccessRequest(accessRequest, segments) {
-        let current = accessRequest;
-        for (var i = 0; i < segments.length; i++) {
-            let segment = segments[i];
-            if (!current.has(segment)) {
-                return undefined;
-            }
-            else {
-                current = current.get(segment);
-            }
-        }
-        return current;
+        return (this._expectedIsAttribute) ? accessRequest.getPath(this._expectedAttribute) : this._expectedValue;
     }
 }
 exports.AbstractSpecification = AbstractSpecification;

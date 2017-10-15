@@ -1,4 +1,5 @@
-import {List, Map} from 'immutable';
+import {fromJS} from 'immutable';
+import {AccessRequest} from 'access-request/access-request';
 
 export class PolicyEnforcementPoint {
   private _pdp;
@@ -8,39 +9,41 @@ export class PolicyEnforcementPoint {
   validateRequest(request) {
     // take the node http request and build a PDP authorization request message
     // at this point, the request has already been authenticated
-    // set the subject parameters...
-    let subject = Map();
-    subject.set('id', request.user.id);
-    subject.set('email', request.user.email);
-    subject.set('isAdmin', request.user.isAdmin);
-    subject.set('token', null);
-    subject.set('clientId', null);
-    subject.set('scopes', List());
-    // set the resource parameters...
-    let resource = Map();
-    resource.set('application', 'application-id');
-    resource.set('query', request.query);
-    resource.set('requestData', request.body);
-    resource.set('path', request.originalUrl);
-    resource.set('raw', request.body);
-    // set the action parameters...
-    let action = Map();
-    action.set('method', request.method);
-    // set the environment parameters...
-    let environment = Map();
-    environment.set('userAgent', null);
-    environment.set('clientIpAddress', null);
-    environment.set('hostIpAddress', null);
-    environment.set('requestedAt', null);
-    environment.set('cookies', []);
-    environment.set('protocol', 'http'); // in a secure system this should be https
-    environment.set('isRequestSecure', request.secure);
+    let body = {
+      // set the subject parameters...
+      subject: {
+        'id': request.user.id,
+        'email': request.user.email,
+        'isAdmin': request.user.isAdmin,
+        'token': null,
+        'clientId': null,
+        'scopes': [],
+      },
+      // set the resource parameters...
+      resource: {
+        'application': 'application-id',
+        'query': request.query,
+        'requestData': request.body,
+        'path': request.originalUrl,
+        'raw': request.body
+      },
+      // set the action parameters...
+      action: {
+        'method': request.method
+      },
+      // set the environment parameters...
+      environment: {
+        'userAgent': null,
+        'clientIpAddress': null,
+        'hostIpAddress': null,
+        'requestedAt': null,
+        'cookies': [],
+        'protocol': 'http', // in a secure system this should be https
+        'isRequestSecure': request.secure
+      }
+    }
     // create the access request and set the request parameters...
-    let accessRequest = Map();
-    accessRequest.set('subject', subject);
-    accessRequest.set('resource', resource);
-    accessRequest.set('action', action);
-    accessRequest.set('environment', environment);
+    let accessRequest = new AccessRequest(fromJS(body));
     let response = this._pdp.authorizeRequestQuery(accessRequest);
     return response;
   }

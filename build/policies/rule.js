@@ -3,11 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class Rule {
     constructor(specification) {
         if (!Array.isArray(specification)) {
-            // if (specification === undefined || !specification instanceof AbstractLogicSpecification) {
             throw new TypeError('The parameter specification is required to be an instance of AbstractSpecification');
         }
         this._specification = specification;
         this._attributeList = [];
+        // all of the attributes required by the specification are pre-generated so 
+        // as we don't need to waste time generating these on the fly...
         this._buildListOfRuleAttributes(specification, this._attributeList);
     }
     get attributes() {
@@ -24,7 +25,6 @@ class Rule {
         // the rule is satisfied correctly...
         // some specifications don't require an expected value, i.e. isTrue, isNull, etc
         // so only check expected if it's not null...
-        // if (specification instanceof AbstractLogicSpecification) {
         if (Array.isArray(specification)) {
             specification.forEach(specification0 => {
                 this._buildListOfRuleAttributes(specification0, attributeList);

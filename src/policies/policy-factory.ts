@@ -5,8 +5,8 @@ import {SpecificationFactory} from './specifications/specification-factory';
 import * as UrlPattern from 'url-pattern';
 
 export class PolicyFactory {
-  private _specificationFactory;
-  constructor(specificationFactory) {
+  private _specificationFactory: SpecificationFactory;
+  constructor(specificationFactory: SpecificationFactory) {
     this._specificationFactory = specificationFactory;
   }
   createPolicyFromJson(jsonPolicy) {
@@ -35,6 +35,6 @@ export class PolicyFactory {
     return new Resource(uri);
   }
   _createRule(plainObjectRules) {
-    return new Rule(this._specificationFactory.build(plainObjectRules));
+    return new Rule(this._specificationFactory.create(plainObjectRules));
   }
 };

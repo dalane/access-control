@@ -7,7 +7,12 @@ class IsTrueSpecification extends abstract_specification_1.AbstractSpecification
     }
     isSatisfiedBy(accessRequest) {
         let actualValue = this._getActualValue(accessRequest);
-        return (actualValue === true);
+        if (typeof actualValue == 'boolean') {
+            return (actualValue === true);
+        }
+        else {
+            return false;
+        }
     }
 }
 exports.IsTrueSpecification = IsTrueSpecification;
