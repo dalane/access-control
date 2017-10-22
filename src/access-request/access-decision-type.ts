@@ -1,4 +1,4 @@
 export enum AccessDecisionType {
-    Allow,
-    Deny
+    Allow = 'Allow',
+    Deny = 'Deny'
 }

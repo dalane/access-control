@@ -1,40 +1,27 @@
 import {Resource} from './resource';
+import {ResourceFactory} from './ResourceFactory';
 import {Policy} from './policy';
 import {Rule} from './rule';
-import {SpecificationFactory} from './specifications/specification-factory';
-import * as UrlPattern from 'url-pattern';
+import {RuleFactory} from './RuleFactory';
 
 export class PolicyFactory {
-  private _specificationFactory: SpecificationFactory;
-  constructor(specificationFactory: SpecificationFactory) {
-    this._specificationFactory = specificationFactory;
+  private _ruleFactory;
+  private _resourceFactory;
+  constructor(ruleFactory: RuleFactory, resourceFactory: ResourceFactory) {
+    this._ruleFactory = ruleFactory;
+    this._resourceFactory = resourceFactory;
   }
-  createPolicyFromJson(jsonPolicy) {
-    let plainObjectPolicy = JSON.parse(jsonPolicy);
-    let rule = this._createRule(plainObjectPolicy.rules);
-    let resource = this._createResource(plainObjectPolicy.resource);
-    return new Policy(plainObjectPolicy.id, plainObjectPolicy.name, plainObjectPolicy.description, plainObjectPolicy.effect, plainObjectPolicy.action, plainObjectPolicy.principal, resource, rule, plainObjectPolicy.obligation);
-  }
-  createPolicyFromRepository(record) {
-    record = {
-      id: 'xxxx',
-      name: '',
-      description: '',
-      effect: '',
-      action: '',
-      principal: [],
-      resource: [],
-      rule: [],
-      obligation: [],
-    };
-    let rule = this._createRule(record.rule);
-    let resource = this._createResource(record.resource);
-    return new Policy(record.id, record.name, record.description, record.effect, record.action, record.principal, resource, rule, record.obligation)
+  create(object) {
+    // a rule is not mandatory so if it's not set in the object then we don't 
+    // need to create a rule and just pass null to the policy...
+    let rule = (object.rule) ? this._createRule(object.rule) : null;
+    let resource = this._createResource(object.resource);
+    return new Policy(object.id, object.name, object.description, object.effect, object.action, object.principal, resource, rule, object.obligation)
   }
   _createResource(uri) {
-    return new Resource(uri);
+    return this._resourceFactory.create(uri);
   }
   _createRule(plainObjectRules) {
-    return new Rule(this._specificationFactory.create(plainObjectRules));
+    return this._ruleFactory.create(plainObjectRules);
   }
 };

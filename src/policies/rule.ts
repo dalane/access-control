@@ -1,12 +1,10 @@
 import {AccessRequest} from 'access-request/access-request';
+import {AbstractCollectionSpecification} from './specifications/abstract-collection-specification';
 
 export class Rule {
   private _specification;
   private _attributeList;
-  constructor(specification) {
-    if (!Array.isArray(specification)) {
-      throw new TypeError('The parameter specification is required to be an instance of AbstractSpecification');
-    }
+  constructor(specification: AbstractCollectionSpecification) {
     this._specification = specification;
     this._attributeList = [];
     // all of the attributes required by the specification are pre-generated so 

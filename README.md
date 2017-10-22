@@ -16,11 +16,11 @@ Policies can be created using JSON files.
   "id": "<unique-id-for-your-policy>",
   "name": "<policy-name>",
   "description": "<policy-description>",
-  "effect": "Deny",
-  "action": "*",
+  "effect": "< Deny | Allow >",
+  "action": "< Create | Read | Update | Delete | * >",
   "resource": "api/users/:userId/relationships/:relationship",
   "principal": ["<user-account-id>"],
-  "rule": [
+  "specification": [
     {
       "isTrue": {
         "attribute": "subject.isAdmin"
@@ -64,7 +64,7 @@ let policy = {
   action: "*",
   resource: "api/users/:userId/relationships/:relationship",
   principal: ["<user-account-id>"],
-  rule: [
+  specification: [
     {
       isTrue: {
         "attribute": "subject.isAdmin"

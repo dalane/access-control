@@ -1,8 +1,8 @@
 import {PolicyRetrievalPoint} from 'policy-retrieval-point';
 import {PolicyInformationPoint} from 'policy-information-point';
-import {AccessRequest} from 'access-request/access-request';
-import {AccessResponse} from 'access-request/access-response';
-import {AccessDecisionType} from 'access-request/access-decision-type';
+import {AccessRequest} from './access-request/access-request';
+import {AccessResponse} from './access-request/access-response';
+import {AccessDecisionType} from './access-request/access-decision-type';
 import {PolicySet} from 'policies/policy-set';
 
 export class PolicyDecisionPoint {
@@ -12,14 +12,14 @@ export class PolicyDecisionPoint {
     this._prp = prp;
     this._pip = pip;
   }
-  authorizeRequestQuery(accessRequest: AccessRequest): AccessResponse {
+  async authorizeRequestQuery(accessRequest: AccessRequest): Promise<AccessResponse> {
     // verify that access request is satisfactory
     // query PolicyRetrievalPoint for policySet containing policies relevant
     // to request...
-    let policySet = this._retrievePolicySet(accessRequest);
+    let policySet = await this._retrievePolicySet(accessRequest);
     // if there are no policies relevant to the access request then send an access-response with 
     // a decision to deny the request
-    if (policySet.length === 0) return this._prepareDenialMessage([]);
+    if (policySet.length === 0) return this._noPoliciesFoundDenialResponse();
     // query policySet for attributes that are missing from the accessRequest
     // let additionalAttributesRequired = this._identifyMissingAccessRequestAttributes(accessRequest, policySet);
     // query the PolicyInformationPoint for missing attributes
@@ -32,7 +32,8 @@ export class PolicyDecisionPoint {
     let allowPolicies = [];
     let denyPolicies = [];
     policySet.forEach(policy => {
-      if (policy.isSatisfiedBy(accessRequest)) {
+      let policyIsSatisfied = policy.isSatisfiedBy(accessRequest);
+      if (policyIsSatisfied) {
         // policy is satisfied, what is the effect?
         if (policy.effect === 'Allow') {
           allowPolicies.push(policy);
@@ -57,13 +58,13 @@ export class PolicyDecisionPoint {
     // allow the request
     return this._prepareAllowMessage(allowPolicies);
   }
-  private _retrievePolicySet(accessRequest: AccessRequest): PolicySet {
+  private _retrievePolicySet(accessRequest: AccessRequest): Promise<PolicySet> {
     let query = {
-      action: accessRequest.body.getIn('action.method'.split('.')),
-      resource: accessRequest.body.getIn('resource.path'.split('.')),
-      principal: accessRequest.body.getIn('subject.id'.split('.'))
+      action: accessRequest.getIn('action.method'.split('.')),
+      resource: accessRequest.getIn('resource.uri'.split('.')),
+      principal: accessRequest.getIn('subject.id'.split('.'))
     };
-    return this._prp.findPolicies(query);
+    return this._prp.find(query);
   }
   private _identifyMissingAccessRequestAttributes(accessRequest: AccessRequest, policySet: PolicySet): Array<object> {
     return [];
@@ -72,13 +73,14 @@ export class PolicyDecisionPoint {
 
   }
   private _noPoliciesFoundDenialResponse(): AccessResponse {
-    return new AccessResponse(AccessDecisionType.Deny, ['No valid access policies found that match the request.'])
+    return new AccessResponse(AccessDecisionType.Deny, ['No valid access policies found that match the request.'], []);
   }
-  _prepareDenialMessage(policies): AccessResponse {
+  private _prepareDenialMessage(policies): AccessResponse {
+    let messages = policies.map(policy => policy.description);
     // we need to parse the policies for any obligations on fail
-    return new AccessResponse(AccessDecisionType.Deny);
+    return new AccessResponse(AccessDecisionType.Deny, messages);
   }
-  _prepareAllowMessage(policies): AccessResponse {
+  private _prepareAllowMessage(policies): AccessResponse {
     // we need to parse the policies for any obligations on success (e.g. apply a filter)
     return new AccessResponse(AccessDecisionType.Allow);
   }

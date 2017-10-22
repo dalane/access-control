@@ -59,3 +59,6 @@ typings/
 
 # Visual Studio Code configuration
 .vscode
+
+# typescript output files
+build

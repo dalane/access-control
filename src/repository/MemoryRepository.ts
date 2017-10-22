@@ -1,4 +1,4 @@
-import {RepositoryInterface} from './repository-interface';
+import {RepositoryInterface} from './RepositoryInterface';
 
 export class MemoryRepository implements RepositoryInterface {
   private _cache;

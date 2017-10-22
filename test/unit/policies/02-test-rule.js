@@ -1,10 +1,11 @@
 'use strict';
 
 const {Rule} = require('../../../build/policies/rule');
+const {RuleFactory} = require('../../../build/policies/RuleFactory');
 const {AnyOfSpecification, IsEqualSpecification, IsTrueSpecification} = require('../../../build/policies/specifications');
 const {expect} = require('chai');
 const td = require('testdouble');
-const {AccessRequestMock} = require('../helpers');
+const {AccessRequestMock} = require('../../helpers');
 const {fromJS} = require('immutable');
 
 describe('rule object', () => {
@@ -70,5 +71,19 @@ describe('rule object', () => {
       }
     }));
     expect(sut.isSatisfiedBy(accessRequest)).to.equal(false);
+  });
+});
+describe('rule factory', () => {
+  it('creates a rule given a plain object rule', () => {
+    let rule = {};
+    let specificationFactory = {
+      create: (object) => {
+        expect(object === rule).to.equal(true);
+        return []; // returns an abstract collection specification extends array so we can just return an array for the mock...
+      }
+    };
+    let sut = new RuleFactory(specificationFactory); 
+    let result = sut.create(rule);
+    expect(result instanceof Rule).to.equal(true);
   });
 });

@@ -4,7 +4,7 @@ const specifications = require('../../../build/policies/specifications');
 const {SpecificationFactory} = require('../../../build/policies/specifications/specification-factory');
 const {expect} = require('chai');
 const {fromJS} = require('immutable');
-const {AccessRequestMock} = require('../helpers');
+const {AccessRequestMock} = require('../../helpers');
 
 describe('specifications', () => {
   describe('modules', () => {

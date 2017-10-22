@@ -1,9 +1,12 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An attribute based access control system for javascript applications",
-  "main": "src/index.js",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
+    "prepublish": "npm run build",
+    "build": "tsc",
     "test": "./node_modules/.bin/nyc node ./test report --reporter=html"
   },
   "repository": {
@@ -24,6 +27,7 @@
     "@types/chai": "^4.0.4",
     "@types/mocha": "^2.2.43",
     "chai": "^4.1.2",
+    "fortune": "^5.4.0",
     "mocha": "^4.0.1",
     "nyc": "^11.2.1",
     "sinon": "^4.0.1",

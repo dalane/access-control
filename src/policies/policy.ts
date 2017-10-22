@@ -1,5 +1,4 @@
-import * as specifications from './specifications';
-import {List} from 'immutable';
+import {fromJS} from 'immutable';
 import {Rule} from './rule';
 import {Resource} from './resource';
 import {AccessRequest} from 'access-request/access-request';
@@ -11,132 +10,91 @@ export class Policy {
   private _effect;
   private _action;
   private _principal;
-  private _resource;
+  private _resource: Resource;
   private _rule;
   private _obligation;
   private _permittedActions;
   private _permittedEffects;
-  private _attributes;
-  constructor(id, name, description, effect, action, principal, resource, rule, obligation) {
-    this.id = id,
-    this.name = name;
-    this.description = description,
-    this.effect = effect;
-    this.action = action;
-    this.principal = principal;
-    this.resource = resource;
-    this.rule = rule;
-    this.obligation = obligation;
-    this._permittedActions = ['Create', 'Update', 'Delete', 'Find', '*'];
-    this._permittedEffects = ['Allow', 'Deny'];
-  }
-  set id(value) {
-    this._id = value;
+  constructor(id, name, description, effect, action, principal = null, resource: Resource, rule: Rule = null, obligation = null) {
+    this._permittedActions = ['create', 'update', 'delete', 'find', '*'];
+    this._permittedEffects = ['allow', 'deny'];
+    if (!this._permittedEffects.includes(effect.toLowerCase())) {
+      throw new Error('Invalid value for effect, expected "Allow" or "Deny"');
+    }
+    if (!this._permittedActions.includes(action.toLowerCase())) {
+      throw new Error('Invalid option for action');
+    }
+    this._id = id,
+    this._name = name;
+    this._description = description,
+    this._effect = effect;
+    this._action = action;
+    this._principal = principal;
+    this._resource = resource;
+    this._rule = rule;
+    this._obligation = obligation;
   }
   get id() {
     return this._id;
   }
-  set name(value) {
-    this._name = value;
-  }
   get name() {
     return this._name;
-  }
-  set description(value) {
-    this._description = value;
   }
   get description() {
     return this._description;
   }
-  set effect(value) {
-    if (!this._permittedEffects.includes(value)) {
-      throw new Error('Invalid value for effect, expected "Allow" or "Deny"');
-    }
-    this._effect = value;
-  }
   get effect() {
     return this._effect;
-  }
-  set action(value) {
-    if (!this._permittedActions.includes(value)) {
-      throw new Error('Invalid option for action');
-    }
-    this._action = value;
   }
   get action() {
     return this._action;
   }
-  set principal(value) {
-    this._principal = value;
-  }
   get principal() {
     return this._principal;
-  }
-  set resource(value) {
-    this._resource = value;
   }
   get resource() {
     return this._resource;
   }
-  set rule(value) {
-    this._rule = value;
-  }
   get rule() {
     return this._rule;
-  }
-  set obligation(value) {
-    this._obligation = value;
   }
   get obligation() {
     return this._obligation;
   }
-  get permittedActions() {
-    return this._permittedActions;
-  }
+  /**
+   * Compares the access request against the rule specification but first checks 
+   * the url for any named or wildcard parameters...
+   * e.g the policy resource '/users/:id/* matched against the request uri of 
+   * '/users/1234/relationships will append to the access request:
+   * 
+   * resource: {
+   *  pathMatch: {
+   *    id: '1234', // for the named parameter
+   *    _: 'relationships // for the wildcard
+   *  }
+   * }
+   * 
+   * and then pass the new access request to the rule to be validated.
+   * 
+   * This can then be access as an an attribute 'resource.pathMatch.id' or a 
+   * lookup ${resource.pathMatch.id}
+   * 
+   * @param {AccessRequest} accessRequest 
+   */
   isSatisfiedBy(accessRequest: AccessRequest) {
-    let isActionMatch = (this.action = '*' || this.permittedActions.includes(accessRequest.body.getIn('action.method'.split('.'))));
-    if (isActionMatch) {
-      // TODO check for the principal first, don't need rules for a principal
-      // rematch the access request resource uri to the resource so that we can
-      // get the parameters
-      let uriMatch = this._resource.isMatch(accessRequest.body.getIn('resource.uri'.split('.')));
-      // if uriMatch is null then the resource uri in the request did not match
-      // the resource uri of the policy. This should already have been filtered
-      // for but checking again just in case
-      if (uriMatch === null) return true;
-      // make an immutable copy of the access request
-      let request = JSON.parse(JSON.stringify(accessRequest), (key, value) => {
-        if (typeof value === 'object') {
-
-        }
-      });
-      // add the uri parameters to the request
-      request.resource.params = uriMatch;
-      // check if the access request passes the policy rule...
-      return this._rule.isSatisfiedBy(accessRequest);
-    } else {
-      return false;
+    if (this._rule === null) {
+      return true;
     }
-  }
-  get attributes() {
-    return this._attributes;
-  }
-  _setAttributes(specification, attributes) {
-    if (specification instanceof specifications.AnyOfSpecification || specification instanceof specifications.AllOfSpecification) {
-      specification.forEach(specification0 => {
-        this._setAttributes(specification0, attributes);
-      });
-    } else {
-      // get the path of the attribute that the specification will require an actual value for
-      let attribute0 = specification.attribute;
-      // if that path is not already in the collection then add it to the attributes collection
-      if (!attributes.includes(attribute0)) attributes.push(attribute0);
-      // check the options to see if the expectedValue is to be found on another attribute rather than a pre-set value
-      if (specification.options && specification.options.valueIsAttribute) {
-        // if the option valueIsAttribute is true then the attribute to check against is specified in as the value
-        let valueAttributePath = specification.value;
-        if (!attributes.includes(valueAttributePath)) attributes.push(valueAttributePath);
+    let uri = accessRequest.getIn('resource.uri'.split('.'));
+    // rematch the access request resource uri to the resource so that we can
+    // get any named or wildcard parameters from the resource uri that might form part of the policy
+    // and create a new access request by merging the resource parameters with the access request
+    let mergedRequest = accessRequest.merge(fromJS({
+      resource: {
+        params: this._resource.match(uri)
       }
-    }
+    }));
+    // check if the access request passes the policy rule...
+    return this._rule.isSatisfiedBy(mergedRequest);
   }
 };
