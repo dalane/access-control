@@ -327,11 +327,11 @@ describe('integration test', () => {
     let policy = {
       id: 'test-policy',
       name: 'AdminUpdateUser',
-      description: 'Only user \'user-test\' is allowed to update user records',
+      description: 'Only user \'test-user\' is allowed to update user records',
       effect: 'Allow',
       action: 'Update',
       resource: '/user/:id',
-      principal: 'user-test'
+      principal: 'test-user'
     };
     await store.request({
       method: 'create',
@@ -371,11 +371,11 @@ describe('integration test', () => {
     let policy = {
       id: 'test-policy',
       name: 'AdminUpdateUser',
-      description: 'The user \'user-test\' is not allowed to update user records',
+      description: 'The user \'test-user\' is not allowed to update user records',
       effect: 'Deny',
       action: 'Update',
       resource: '/user/:id/relationships',
-      principal: 'user-test'
+      principal: 'test-user'
     };
     await store.request({
       method: 'create',
@@ -406,6 +406,50 @@ describe('integration test', () => {
     let result = await service.pep.validateRequest(request);
     expect(result.decision).to.equal('Deny');
     expect(result.messages[0]).to.equal(policy.description);
+  });
+  it('returns a deny decision because the path was not found', async () => {
+    let store = storeFactory();
+    let repository = new FortuneRepository(store);
+    let service = new Service(repository);
+    await store.connect();
+    let policy = {
+      id: 'test-policy',
+      name: 'AdminUpdateUser',
+      description: 'The user \'test-user\' is not allowed to update user records',
+      effect: 'Deny',
+      action: 'Update',
+      resource: '/user/:id',
+      principal: 'test-user'
+    };
+    await store.request({
+      method: 'create',
+      type: 'policy',
+      payload: [policy]
+    });
+    // refresh the policy retrieval point to ensure that the policies
+    // are loaded...
+    await service.prp.refresh();
+    let request = {
+      // set the subject parameters...
+      subject: {
+        id: 'test-user',
+        email: 'example@example.com',
+        isAdmin: false
+      },
+      // set the resource parameters...
+      resource: {
+        uri: '/projects/project-id'
+      },
+      // set the action parameters...
+      action: {
+        method: 'update'
+      },
+      // set the environment parameters...
+      environment: {}
+    }
+    let result = await service.pep.validateRequest(request);
+    expect(result.decision).to.equal('Deny');
+    expect(result.messages[0]).to.equal('No valid access policies found that match the request.');
   });
 });
 

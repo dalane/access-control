@@ -32,9 +32,10 @@ export class PolicyRetrievalPoint {
       // - does the query.action match?
       // - does the query.resource match?
       // - does the query.principal match?
-      let match = this._isMatch(policy, query.action, query.resource, query.principal);
+      let match = this._isMatch(policy, query);
+      // console.log(match, policy);
       // push any matching policies into the policySet
-      if (match !== null) policySet.add(policy);
+      if (match) policySet.add(policy);
     });
     // return the policy set
     return policySet;
@@ -46,21 +47,17 @@ export class PolicyRetrievalPoint {
   async refresh(): Promise<void> {
     this._cache = await this._findAll();
     return;
-    // return this._repository.findAll().then(payload => {
-    //   // create the policy object for each record and reset the cache
-    //   this._cache = payload.map(record => {
-    //     return this._policyFactory.create(record);
-    //   });
-    //   return true;
-    // });
   }
   private _findAll(): Promise<Array<object>> {
     return this._repository.findAll().then(payload => {
       return payload.map(record => this._policyFactory.create(record));
     });
   }
-  private _isMatch(policy:Policy, queryAction:string, queryResource:string, queryPrincipal:string) {
-    return this._isActionMatch(policy, queryAction) && this._isPrincipalMatch(policy, queryPrincipal) && this._isResourceMatch(policy, queryResource);
+  private _isMatch(policy:Policy, query) {
+    let isActionMatch = this._isActionMatch(policy, query.action);
+    let isResourceMatch = this._isResourceMatch(policy, query.resource);
+    let isPrincipalMatch = this._isPrincipalMatch(policy, query.principal);
+    return isActionMatch && isResourceMatch && isPrincipalMatch;
   }
   /**
    * Returns true if the queried action matchs the policy's action
@@ -71,7 +68,7 @@ export class PolicyRetrievalPoint {
   private _isActionMatch(policy: Policy, queryAction): Boolean {
     // return true if the policy has an action of '*' or the policy's action 
     // equals the query action
-    return (policy.action === '*' || policy.action === queryAction);
+    return (policy.action === '*' || policy.action.toLowerCase() === queryAction.toLowerCase());
   }
   /**
    * Returns true if the queried principal matchs the policy's principal

@@ -22,7 +22,7 @@ export class PolicyDecisionPoint {
     if (policySet.length === 0) return this._noPoliciesFoundDenialResponse();
     // query policySet for attributes that are missing from the accessRequest
     // let additionalAttributesRequired = this._identifyMissingAccessRequestAttributes(accessRequest, policySet);
-    // query the PolicyInformationPoint for missing attributes
+    // TODO: query the PolicyInformationPoint for missing attributes
     // additionalAttributesRequired.forEach(missingAttribute => {
     //   this._pip.findValue(accessRequest, missingAttribute.attribute, missingAttribute.datatType, missingAttribute.issuer);
     // });
@@ -35,7 +35,7 @@ export class PolicyDecisionPoint {
       let policyIsSatisfied = policy.isSatisfiedBy(accessRequest);
       if (policyIsSatisfied) {
         // policy is satisfied, what is the effect?
-        if (policy.effect === 'Allow') {
+        if (policy.effect.toLowerCase() === 'allow') {
           allowPolicies.push(policy);
         } else { 
           // the effect if the policy is satisfied is to deny the request.
@@ -43,7 +43,7 @@ export class PolicyDecisionPoint {
         }
       } else {
         // policy is not satisfied, what is the effect?
-        if (policy.effect === 'Deny') {
+        if (policy.effect.toLowerCase() === 'deny') {
           allowPolicies.push(policy);
         } else {
           denyPolicies.push(policy);
