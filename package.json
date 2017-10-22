@@ -1,6 +1,6 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/index.js",
   "types": "build/index.d.ts",

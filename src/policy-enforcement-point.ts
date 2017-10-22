@@ -6,10 +6,9 @@ export class PolicyEnforcementPoint {
   constructor(pdp) {
     this._pdp = pdp;
   }
-  validateRequest(request) {
+  async validateRequest(request) {
     // create the access request and set the request parameters...
     let accessRequest = new AccessRequest(fromJS(request));
-    let response = this._pdp.authorizeRequestQuery(accessRequest);
-    return response;
+    return await this._pdp.authorizeRequestQuery(accessRequest);
   }
 };
