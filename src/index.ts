@@ -13,13 +13,15 @@ import {PolicyInformationPoint} from './policy-information-point';
 class Service {
   private _policyEnforcementPoint: PolicyEnforcementPoint;
   private _policyRetrievalPoint: PolicyRetrievalPoint;
-  constructor(repository: RepositoryInterface, policyInformationPoint: PolicyInformationPoint = null) {
+  private _policyInformationPoint: PolicyInformationPoint;
+  constructor(repository: RepositoryInterface) {
     const specificationFactory = new SpecificationFactory();
     const resourceFactory = new ResourceFactory();
     const ruleFactory = new RuleFactory(specificationFactory);
     const policyFactory = new PolicyFactory(ruleFactory, resourceFactory);
     this._policyRetrievalPoint = new PolicyRetrievalPoint(repository, policyFactory);
-    const pdp = new PolicyDecisionPoint(this._policyRetrievalPoint, policyInformationPoint);
+    this._policyInformationPoint = new PolicyInformationPoint();
+    const pdp = new PolicyDecisionPoint(this._policyRetrievalPoint, this._policyInformationPoint);
     this._policyEnforcementPoint = new PolicyEnforcementPoint(pdp);
   }
   get pep(): PolicyEnforcementPoint {
@@ -27,6 +29,9 @@ class Service {
   }
   get prp(): PolicyRetrievalPoint {
     return this._policyRetrievalPoint;
+  }
+  get pip(): PolicyInformationPoint {
+    return this._policyInformationPoint;
   }
   refreshPolicies(): Promise<void> {
     return this._policyRetrievalPoint.refresh();
