@@ -10,6 +10,7 @@ import {ResourceFactory} from './policies/ResourceFactory';
 import {PolicyDecisionPoint} from './policy-decision-point';
 import {PolicyInformationPoint} from './policy-information-point';
 import {CallableInterface} from './callable-interface';
+import {AbstractPolicyInformationHandler} from './AbstractPolicyInformationHandler';
 
 class Service {
   private _policyEnforcementPoint: PolicyEnforcementPoint;
@@ -44,5 +45,6 @@ export {
   FortuneRepository,
   MemoryRepository,
   Service,
-  CallableInterface
+  CallableInterface,
+  AbstractPolicyInformationHandler
 };
