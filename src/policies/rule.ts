@@ -34,11 +34,9 @@ export class Rule {
     }
   }
   _addSpecificationAttributesToList(specification, attributeList) {
-    let attribute = specification.attribute;
-    // only add the attribute to the list if it doesn't already exist...
-    if (attributeList.indexOf(attribute) === -1) {
-      attributeList.push(attribute);
-    }
+    this._addAttributeToList(specification, attributeList);
+    // now check if the expected value is a reference to an attribute, i.e. it 
+    // is in the format ${path.to.attribute}...
     // some specifications don't have an expected value, i.e. isTrue...
     if (specification.expected === null) {
       return;
@@ -48,8 +46,23 @@ export class Rule {
       this._addExpectedAttributeToList(specification, attributeList);
     }
   }
+  _addAttributeToList(specification, attributeList) {
+    let attribute = specification.attribute;
+    // if the expected attribute required begins with 'resource.params' then skip it 
+    // because that is exracted by the policy when isSatisfied is called and not
+    // retrieved using the policy information point...
+    if (attribute.startsWith('resource.params')) return;
+    // only add the attribute to the list if it doesn't already exist...
+    if (attributeList.indexOf(attribute) === -1) {
+      attributeList.push(attribute);
+    }
+  }
   _addExpectedAttributeToList(specification, attributeList) {
     let attribute = specification.expectedAttribute;
+    // if the expected attribute required begins with 'resource.params' then skip it 
+    // because that is exracted by the policy when isSatisfied is called and not
+    // retrieved using the policy information point...
+    if (attribute.startsWith('resource.params')) return;
     // only add the attribute to the list if it doesn't already exist...
     if (attributeList.indexOf(attribute) === -1) {
       attributeList.push(attribute);

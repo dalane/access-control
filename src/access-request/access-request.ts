@@ -23,4 +23,7 @@ export class AccessRequest {
   getIn(searchKeyPath: Array<string>) {
     return this._body.getIn(searchKeyPath);
   }
+  hasIn(searchKeyPath: Array<string>) {
+    return this._body.hasIn(searchKeyPath);
+  }
 }

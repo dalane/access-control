@@ -15,6 +15,7 @@ const {PolicyInformationPoint} = require('../../build/policy-information-point')
 const {PolicyRetrievalPoint} = require('../../build/policy-retrieval-point');
 const {AccessRequest} = require('../../build/access-request/access-request');
 const {AccessResponse} = require('../../build/access-request/access-response');
+const {PolicyInformationHandlerMock} = require('../helpers');
 
 const storeFactory = () => {
   const types = {
@@ -450,6 +451,119 @@ describe('integration test', () => {
     let result = await service.pep.validateRequest(request);
     expect(result.decision).to.equal('Deny');
     expect(result.messages[0]).to.equal('No valid access policies found that match the request.');
+  });
+  it('returns an allow decision as the user is an admin but the attribute for isAdmin was retrieved using the PIP', async () => {
+    let store = storeFactory();
+    let repository = new FortuneRepository(store);
+    let service = new Service(repository);
+    await store.connect();
+    let policy = {
+      id: 'test-policy',
+      name: 'AdminUpdateUser',
+      description: 'Updating of user records can only be made by an admin or a user on their own record',
+      effect: 'Allow',
+      action: 'Update',
+      resource: '/user/:id/relationships',
+      rule: [
+        {
+          isTrue: {
+            attribute: 'subject.isAdmin'
+          }
+        }
+      ]
+    };
+    // first let's add the policy to the store
+    await store.request({
+      method: 'create',
+      type: 'policy',
+      payload: [policy]
+    });
+    // refresh the policy retrieval point to ensure that the policies
+    // are cached...
+    await service.prp.refresh();
+    let request = {
+      // set the subject parameters...
+      subject: {
+        id: 'test-user',
+        email: 'example@example.com',
+      },
+      // set the resource parameters...
+      resource: {
+        uri: '/user/test-user/relationships'
+      },
+      // set the action parameters...
+      action: {
+        method: 'update'
+      },
+      // set the environment parameters...
+      environment: {}
+    }
+    // policy requires the attribute subject.isAdmin but it's not in the request
+    // so we will add it using the PIP
+    let policyInformationHandlerMock = new PolicyInformationHandlerMock();
+    policyInformationHandlerMock.callCb = (accessRequest, attribute, dataType, issuer) => {
+      return true;
+    };
+    service.pip.findHandlers.set('subject.isAdmin', policyInformationHandlerMock);
+    let result = await service.pep.validateRequest(request);
+    expect(result.decision).to.equal('Allow');
+  });
+  it('returns a deny decision as the user is not an admin but the attribute for isAdmin was retrieved using the PIP', async () => {
+    let store = storeFactory();
+    let repository = new FortuneRepository(store);
+    let service = new Service(repository);
+    await store.connect();
+    let policy = {
+      id: 'test-policy',
+      name: 'AdminUpdateUser',
+      description: 'Updating of user records can only be made by an admin.',
+      effect: 'Allow',
+      action: 'Update',
+      resource: '/user/:id/relationships',
+      rule: [
+        {
+          isTrue: {
+            attribute: 'subject.isAdmin'
+          }
+        }
+      ]
+    };
+    // first let's add the policy to the store
+    await store.request({
+      method: 'create',
+      type: 'policy',
+      payload: [policy]
+    });
+    // refresh the policy retrieval point to ensure that the policies
+    // are cached...
+    await service.prp.refresh();
+    let request = {
+      // set the subject parameters...
+      subject: {
+        id: 'test-user',
+        email: 'example@example.com',
+      },
+      // set the resource parameters...
+      resource: {
+        uri: '/user/test-user/relationships'
+      },
+      // set the action parameters...
+      action: {
+        method: 'update'
+      },
+      // set the environment parameters...
+      environment: {}
+    }
+    // policy requires the attribute subject.isAdmin but it's not in the request
+    // so we will add it using the PIP
+    let policyInformationHandlerMock = new PolicyInformationHandlerMock();
+    policyInformationHandlerMock.callCb = (accessRequest, attribute, dataType, issuer) => {
+      return false;
+    };
+    service.pip.findHandlers.set('subject.isAdmin', policyInformationHandlerMock);
+    let result = await service.pep.validateRequest(request);
+    expect(result.decision).to.equal('Deny');
+    expect(result.messages[0]).to.equal(policy.description);
   });
 });
 

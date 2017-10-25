@@ -1,5 +1,7 @@
 'use strict';
 
+const {AbstractPolicyInformationHandler} = require('../build/AbstractPolicyInformationHandler');
+
 class SpecificationMock {
   set isSatisfiedByCb(value) {
     this._isSatisfiedByCb = value;
@@ -51,8 +53,38 @@ class ResourceMock {
   }
 }
 
+class PolicyRetrievalPointMock {
+  set findCb(value) {
+    this._findCb = value;
+  }
+  find(query) {
+    return this._findCb(query);
+  }
+}
+
+class PolicyInformationPointMock {
+  set findValueCb(value) {
+    this._findValueCb = value;
+  }
+  findValue(accessRequest, missingAttribute) {
+    return this._findValueCb(accessRequest, missingAttribute);
+  }
+}
+
+class PolicyInformationHandlerMock extends AbstractPolicyInformationHandler {
+  set callCb(value) {
+    this._callCb = value;
+  }
+  async call(accessRequest, attribute, dataType, issuer) {
+    return this._callCb(accessRequest, attribute, dataType, issuer); 
+  }
+}
+
 module.exports = {
   AccessRequestMock: AccessRequestMock,
   RuleMock: RuleMock,
-  ResourceMock: ResourceMock
+  ResourceMock: ResourceMock,
+  PolicyInformationPointMock: PolicyInformationPointMock,
+  PolicyRetrievalPointMock: PolicyRetrievalPointMock,
+  PolicyInformationHandlerMock: PolicyInformationHandlerMock
 };

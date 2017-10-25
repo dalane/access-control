@@ -9,6 +9,7 @@ import {SpecificationFactory} from './policies/specifications/specification-fact
 import {ResourceFactory} from './policies/ResourceFactory';
 import {PolicyDecisionPoint} from './policy-decision-point';
 import {PolicyInformationPoint} from './policy-information-point';
+import {CallableInterface} from './callable-interface';
 
 class Service {
   private _policyEnforcementPoint: PolicyEnforcementPoint;
@@ -42,5 +43,6 @@ export {
   RepositoryInterface,
   FortuneRepository,
   MemoryRepository,
-  Service
+  Service,
+  CallableInterface
 };
