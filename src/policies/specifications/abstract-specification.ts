@@ -94,7 +94,7 @@ export abstract class AbstractSpecification implements IsSatisfiedByInterface  {
    * @return {*}               The value found at the attribute path in the access request
    */
   protected _getActualValue(accessRequest: AccessRequest) {
-    return accessRequest.getIn(this._attributePath.split('.'));
+    return (accessRequest.hasIn(this._attributePath.split('.'))) ? accessRequest.getIn(this._attributePath.split('.')) : undefined;
   }
   /**
    * An internal function used by the specification to extract the expected value. It will return the expected value unless it's another attribute then it will extract the expected value from the acces request.
@@ -102,6 +102,10 @@ export abstract class AbstractSpecification implements IsSatisfiedByInterface  {
    * @return {*}               The expected value as set in the constructor or a value extracted from the access request
    */
   protected _getExpectedValue(accessRequest: AccessRequest) {
-    return (this._expectedIsAttribute) ? accessRequest.getIn(this._expectedAttribute.split('.')) : this._expectedValue;    
+    if (this._expectedIsAttribute) {
+      return (accessRequest.hasIn(this._expectedAttribute.split('.'))) ? accessRequest.getIn(this._expectedAttribute.split('.')) : undefined;
+    } else {
+      return this._expectedValue;
+    }
   }
 }

@@ -21,6 +21,9 @@ class AccessRequestMock {
   set getInCb(value) {
     this._getInCb = value;
   }
+  set hasInCb(value) {
+    this._hasInCb = value;
+  }
   getPath(path) {
     return this._body.getIn(path.split('.'));
   }
@@ -29,6 +32,12 @@ class AccessRequestMock {
       return this._body.getIn(pathSegments);
     }
     return this._getInCb(pathSegments);
+  }
+  hasIn(pathSegments) {
+    if (!this._hasInCb) {
+      return true;
+    }
+    return this._hasInCb(pathSegments);
   }
   merge(data) {
     return this._mergeCb(data);

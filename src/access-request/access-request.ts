@@ -17,9 +17,6 @@ export class AccessRequest {
   get(key) {
     return this._body.get(key);
   }
-  // getPath(path: String): any {
-  //   return this._body.getIn(path.split('.'));
-  // }
   getIn(searchKeyPath: Array<string>) {
     return this._body.getIn(searchKeyPath);
   }
