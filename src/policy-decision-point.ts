@@ -20,7 +20,7 @@ export class PolicyDecisionPoint {
     let policySet = await this._retrievePolicySet(accessRequest);
     // if there are no policies relevant to the access request then send an access-response with 
     // a decision to deny the request
-    if (policySet.length === 0) return this._noPoliciesFoundDenialResponse();
+    if (policySet.length === 0) return this._noPoliciesFoundDenialResponse(accessRequest);
     // update the access request with missing attributes
     // let updatedAccessRequest = await this._updateAccessRequestWithMissingAttributes(accessRequest, policySet);
     let updatedAccessRequest = await this._retrieveMissingAttributes(accessRequest, policySet);
@@ -54,10 +54,10 @@ export class PolicyDecisionPoint {
     if (allowPolicies.length === 0 || denyPolicies.length !== 0) {
       // deny the request as we deny by default or we 
       // deny the request because we haven't passed all the checks
-      return this._prepareDenialMessage(denyPolicies);
+      return this._prepareDenialMessage(denyPolicies, updatedAccessRequest);
     }
     // allow the request
-    return this._prepareAllowMessage(allowPolicies);
+    return this._prepareAllowMessage(allowPolicies, updatedAccessRequest);
   }
   private _retrievePolicySet(accessRequest: AccessRequest): Promise<PolicySet> {
     let query = {
@@ -104,16 +104,16 @@ export class PolicyDecisionPoint {
       }, missingAttributes);
     }, []);
   }
-  private _noPoliciesFoundDenialResponse(): AccessResponse {
-    return new AccessResponse(AccessDecisionType.Deny, ['No valid access policies found that match the request.'], []);
+  private _noPoliciesFoundDenialResponse(accessRequest: AccessRequest): AccessResponse {
+    return new AccessResponse(accessRequest, AccessDecisionType.Deny, ['No valid access policies found that match the request.'], []);
   }
-  private _prepareDenialMessage(policies): AccessResponse {
+  private _prepareDenialMessage(policies, accessRequest: AccessRequest): AccessResponse {
     let messages = policies.map(policy => policy.description);
     // we need to parse the policies for any obligations on fail
-    return new AccessResponse(AccessDecisionType.Deny, messages);
+    return new AccessResponse(accessRequest, AccessDecisionType.Deny, messages, policies.obligations);
   }
-  private _prepareAllowMessage(policies): AccessResponse {
+  private _prepareAllowMessage(policies, accessRequest: AccessRequest): AccessResponse {
     // we need to parse the policies for any obligations on success (e.g. apply a filter)
-    return new AccessResponse(AccessDecisionType.Allow);
+    return new AccessResponse(accessRequest, AccessDecisionType.Allow, null, policies.obligations);
   }
 };
