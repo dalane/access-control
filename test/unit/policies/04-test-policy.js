@@ -105,8 +105,8 @@ describe('Policies', () => {
       let principal = 'principal';
       let resource = new ResourceMock();
       let rule = new RuleMock();
-      let obligation = [];
-      let sut = new Policy(id, name, description, effect, action, principal, resource, rule, obligation);
+      let obligations = [];
+      let sut = new Policy(id, name, description, effect, action, principal, resource, rule, obligations);
       expect(sut.id).to.equal(id);
       expect(sut.name).to.equal(name);
       expect(sut.description).to.equal(description);
@@ -115,7 +115,7 @@ describe('Policies', () => {
       expect(sut.principal).to.equal(principal);
       expect(sut.resource === resource).to.equal(true);
       expect(sut.rule === rule).to.equal(true);
-      expect(sut.obligation === obligation).to.equal(true);
+      expect(sut.obligations === obligations).to.equal(true);
     });
   });
   describe('Policy factory', () => {
@@ -138,7 +138,12 @@ describe('Policies', () => {
           return resource;
         }
       };
-      let sut = new PolicyFactory(ruleFactory, resourceFactory);
+      let obligationExpressionFactory = {
+        create: (pojo) => {
+          return [];
+        }
+      };
+      let sut = new PolicyFactory(ruleFactory, resourceFactory, obligationExpressionFactory);
       let plainObjectPolicy = {
         id: '1234',
         name: 'test policy',

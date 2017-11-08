@@ -12,10 +12,10 @@ export class Policy {
   private _principal;
   private _resource: Resource;
   private _rule;
-  private _obligation;
+  private _obligations;
   private _permittedActions;
   private _permittedEffects;
-  constructor(id, name, description, effect, action, principal = null, resource: Resource, rule: Rule = null, obligation = null) {
+  constructor(id, name, description, effect, action, principal = null, resource: Resource, rule: Rule = null, obligations = []) {
     this._permittedActions = ['create', 'update', 'delete', 'find', '*'];
     this._permittedEffects = ['allow', 'deny'];
     if (!this._permittedEffects.includes(effect.toLowerCase())) {
@@ -32,7 +32,7 @@ export class Policy {
     this._principal = principal;
     this._resource = resource;
     this._rule = rule;
-    this._obligation = obligation;
+    this._obligations = obligations;
   }
   get id() {
     return this._id;
@@ -58,8 +58,8 @@ export class Policy {
   get rule() {
     return this._rule;
   }
-  get obligation() {
-    return this._obligation;
+  get obligations() {
+    return this._obligations;
   }
   /**
    * Compares the access request against the rule specification but first checks 

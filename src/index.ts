@@ -11,6 +11,7 @@ import {PolicyDecisionPoint} from './policy-decision-point';
 import {PolicyInformationPoint} from './policy-information-point';
 import {CallableInterface} from './callable-interface';
 import {AbstractPolicyInformationHandler} from './AbstractPolicyInformationHandler';
+import {ObligationExpressionFactory} from './policies/obligations/ObligationExpressionFactory';
 
 class Service {
   private _policyEnforcementPoint: PolicyEnforcementPoint;
@@ -20,7 +21,8 @@ class Service {
     const specificationFactory = new SpecificationFactory();
     const resourceFactory = new ResourceFactory();
     const ruleFactory = new RuleFactory(specificationFactory);
-    const policyFactory = new PolicyFactory(ruleFactory, resourceFactory);
+    const obligationExpressionFactory = new ObligationExpressionFactory();
+    const policyFactory = new PolicyFactory(ruleFactory, resourceFactory, obligationExpressionFactory);
     this._policyRetrievalPoint = new PolicyRetrievalPoint(repository, policyFactory);
     this._policyInformationPoint = new PolicyInformationPoint();
     const pdp = new PolicyDecisionPoint(this._policyRetrievalPoint, this._policyInformationPoint);

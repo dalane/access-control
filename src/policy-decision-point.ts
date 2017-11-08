@@ -54,10 +54,10 @@ export class PolicyDecisionPoint {
     if (allowPolicies.length === 0 || denyPolicies.length !== 0) {
       // deny the request as we deny by default or we 
       // deny the request because we haven't passed all the checks
-      return this._prepareDenialMessage(denyPolicies, updatedAccessRequest);
+      return this._prepareDenialResponse(denyPolicies, updatedAccessRequest);
     }
     // allow the request
-    return this._prepareAllowMessage(allowPolicies, updatedAccessRequest);
+    return this._prepareAllowResponse(allowPolicies, updatedAccessRequest);
   }
   private _retrievePolicySet(accessRequest: AccessRequest): Promise<PolicySet> {
     let query = {
@@ -107,13 +107,82 @@ export class PolicyDecisionPoint {
   private _noPoliciesFoundDenialResponse(accessRequest: AccessRequest): AccessResponse {
     return new AccessResponse(accessRequest, AccessDecisionType.Deny, ['No valid access policies found that match the request.'], []);
   }
-  private _prepareDenialMessage(policies, accessRequest: AccessRequest): AccessResponse {
+  private async _prepareDenialResponse(policies, accessRequest: AccessRequest): Promise<AccessResponse> {
     let messages = policies.map(policy => policy.description);
     // we need to parse the policies for any obligations on fail
-    return new AccessResponse(accessRequest, AccessDecisionType.Deny, messages, policies.obligations);
+    let obligations = await this._prepareObligationsResponse(policies, accessRequest, AccessDecisionType.Deny);
+    return new AccessResponse(accessRequest, AccessDecisionType.Deny, messages, obligations);
   }
-  private _prepareAllowMessage(policies, accessRequest: AccessRequest): AccessResponse {
+  private async _prepareAllowResponse(policies, accessRequest: AccessRequest): Promise<AccessResponse> {
     // we need to parse the policies for any obligations on success (e.g. apply a filter)
-    return new AccessResponse(accessRequest, AccessDecisionType.Allow, null, policies.obligations);
+    let obligations = await this._prepareObligationsResponse(policies, accessRequest, AccessDecisionType.Allow);
+    return new AccessResponse(accessRequest, AccessDecisionType.Allow, null, obligations);
+  }
+  private async _prepareObligationsResponse(policySet, accessRequest, decision: AccessDecisionType): Promise<Array<object>> {
+    let obligationsResponse = [];
+    let matchedObligationExpressions = this._findMatchingDecisionObligations(policySet, decision);
+    if (matchedObligationExpressions.length === 0) return obligationsResponse;
+    let requiredAttributes = [];
+    // identify the attributes that are required for all of the obligations
+    matchedObligationExpressions.forEach(obligation => {
+      obligation.attributes.forEach(attribute => {
+        if (requiredAttributes.indexOf(attribute) === -1) {
+          requiredAttributes.push(attribute);
+        }
+      });
+    });
+    // retrieve values for attributes that are found in the access request and make a list of any that can't be found
+    let matchedAttributes: Map<string, any> = Map();
+    let missingAttributes = [];
+    requiredAttributes.forEach(attribute => {
+      let searchKey = attribute.split('.');
+      if (accessRequest.hasIn(searchKey)) {
+        matchedAttributes = matchedAttributes.set(attribute, accessRequest.getIn(searchKey));
+      } else {
+        missingAttributes.push(attribute);
+      }
+    });
+    // retrieve values for any attributes missing from the access request
+    if (missingAttributes.length) {
+      let foundAttributes = await this._findAttributesForObligations(accessRequest, missingAttributes);
+      matchedAttributes = matchedAttributes.withMutations(map => {
+        for (let i = 0; i < missingAttributes.length; i++) {
+          let key = missingAttributes[i];
+          let value = foundAttributes[i];
+          map.set(key, value);
+        }
+      });
+    }
+    // create the obligations response for each obligation with the final values
+    matchedObligationExpressions.forEach(obligation => {
+      let payload = {
+        id: obligation.id,
+        data: {}
+      };
+      obligation.expression.forEach(attributeExpression => {
+        payload.data[attributeExpression.property] = (attributeExpression.value) ? attributeExpression.value : matchedAttributes.get(attributeExpression.attribute);
+      });
+      obligationsResponse.push(payload);
+    });
+    return obligationsResponse;
+  }
+  private _findMatchingDecisionObligations(policySet, decision) {
+    // go through each policy in the policy set
+    return policySet.reduce((obligations, policy) => {
+      // then go through each obligation in the policy
+      return policy.obligations.reduce((obligations, obligation) => {
+        // add the obligation to the obligations array if the fulfillOn property matches the decision
+        if (obligation.fulfillOn.toLowerCase() === decision.toLowerCase()) {
+          obligations.push(obligation);
+        }
+        return obligations;
+      }, obligations);
+    }, []);
+  }
+  private _findAttributesForObligations(accessRequest, missingAttributes) {
+    let promises = missingAttributes.map(attribute => {
+      return this._pip.findValue(accessRequest, attribute);
+    });
+    return Promise.all(promises);
   }
 };
