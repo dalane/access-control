@@ -154,5 +154,45 @@ describe('Policies', () => {
       let policy = sut.create(plainObjectPolicy);
       expect(policy instanceof Policy).to.equal(true);
     });
+    it('throw an error if the POJO contains invalid property names', () => {
+      let ruleFactory = {
+        create: (object) => {
+          let rule = new RuleMock();
+          rule.isSatisfiedByCb = (accessRequest) => {
+            return true;
+          };
+          return rule;
+        }
+      };
+      let resourceFactory = {
+        create: (uri) => {
+          let resource = new ResourceMock(uri);
+          resource.matchCb = (uri) => {
+            return {};
+          };
+          return resource;
+        }
+      };
+      let obligationExpressionFactory = {
+        create: (pojo) => {
+          return [];
+        }
+      };
+      let sut = new PolicyFactory(ruleFactory, resourceFactory, obligationExpressionFactory);
+      let plainObjectPolicy = {
+        id: '1234',
+        name: 'test policy',
+        effect: 'Allow',
+        action: 'Create',
+        resource: '/path/to/resource',
+        rules: []
+      };
+      try {
+        let policy = sut.create(plainObjectPolicy);
+      } catch (e) {
+        expect(e instanceof TypeError).to.equal(true);
+        expect(e.message).to.equal('You have attempted to create a policy with invalid fields: rules.')
+      }
+    });
   });
 });

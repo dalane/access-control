@@ -15,6 +15,26 @@ export class PolicyFactory {
     this._obligationExpressionFactory = obligationExpressionFactory;
   }
   create(object) {
+    let policyProperties = Object.getOwnPropertyNames(object);
+    let invalidProperties = policyProperties.filter(property => {
+      let validProperties = [
+        'id',
+        'name',
+        'description',
+        'effect',
+        'action',
+        'principal',
+        'resource',
+        'rule',
+        'obligations'
+      ];
+      if (validProperties.indexOf(property) === -1) {
+        return property;
+      }
+    });
+    if (invalidProperties.length !== 0) {
+      throw new TypeError('You have attempted to create a policy with invalid fields: ' + invalidProperties.join('; ') + '.');
+    }
     // a rule is not mandatory so if it's not set in the object then we don't 
     // need to create a rule and just pass null to the policy...
     let rule = (object.rule) ? this._createRule(object.rule) : null;
