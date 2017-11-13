@@ -3,7 +3,7 @@ import {AbstractCollectionSpecification} from './abstract-collection-specificati
 export class AllOfSpecification extends AbstractCollectionSpecification {
   isSatisfiedBy(accessRequest) {
     if (this.length === 0) {
-      return true;
+      return false;
     }
     let failCount = 0;
     this.forEach(specification => {
