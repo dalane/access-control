@@ -6,6 +6,7 @@ export class IsPresentSpecification extends AbstractSpecification {
   }
   isSatisfiedBy(accessRequest) {
     let actualValue = this._getActualValue(accessRequest);
-    return (actualValue !== undefined);
+    let isNull = (actualValue === null);
+    return (actualValue !== undefined && !isNull);
   }
 }

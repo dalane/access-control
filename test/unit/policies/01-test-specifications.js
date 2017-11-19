@@ -307,6 +307,16 @@ describe('specifications', () => {
       });
     });
     describe('all-of specification', () => {
+      it('returns false if empty', () => {
+        let sut = new specifications.AllOfSpecification();
+        let accessRequest = new AccessRequestMock(fromJS({
+          subject: {
+            name: 'John Smith',
+            isAdmin: true
+          }
+        }));
+        expect(sut.isSatisfiedBy(accessRequest)).to.equal(false);
+      });
       it('returns true if all specifications in the collection return true', () => {
         let sut = new specifications.AllOfSpecification();
         sut.push(new specifications.IsEqualSpecification('subject.name', 'John Smith'));
@@ -333,6 +343,16 @@ describe('specifications', () => {
       });
     });
     describe('any-of specification', () => {
+      it('returns false if empty', () => {
+        let sut = new specifications.AnyOfSpecification();
+        let accessRequest = new AccessRequestMock(fromJS({
+          subject: {
+            name: 'John Smith',
+            isAdmin: true
+          }
+        }));
+        expect(sut.isSatisfiedBy(accessRequest)).to.equal(false);
+      });
       it('returns true if at least one specification in the collection returns true', () => {
         let sut = new specifications.AnyOfSpecification();
         sut.push(new specifications.IsEqualSpecification('subject.name', 'John Smith'));

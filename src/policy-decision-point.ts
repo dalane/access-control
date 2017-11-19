@@ -160,7 +160,7 @@ export class PolicyDecisionPoint {
         data: {}
       };
       obligation.expression.forEach(attributeExpression => {
-        payload.data[attributeExpression.property] = (attributeExpression.value) ? attributeExpression.value : matchedAttributes.get(attributeExpression.attribute);
+        payload.data[attributeExpression.property] = (attributeExpression.value !== undefined) ? attributeExpression.value : matchedAttributes.get(attributeExpression.attribute);
       });
       obligationsResponse.push(payload);
     });
