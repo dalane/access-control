@@ -1,12 +1,12 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
     "install": "npm run build",
-    "build": "tsc",
+    "build": "./node_modules/.bin/tsc",
     "pretest": "rm -r ./build/* && npm run build",
     "test": "./node_modules/.bin/nyc node ./test report --reporter=html"
   },
