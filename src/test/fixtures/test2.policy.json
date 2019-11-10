@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "test2",
+  "specification": {
+    "allOf": [
+      {
+        "isEqual": {
+          "attribute": "subject.name",
+          "expected": "John Smith"
+        }
+      }
+    ]
+  }
+}

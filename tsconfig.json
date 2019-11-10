@@ -1,20 +1,31 @@
 {
   "compilerOptions": {
+    "allowJs": false,
     "alwaysStrict": true,
     "module": "commonjs",
-    "outDir": "./build",
-    "allowJs": false,
-    "target": "es6",
-    "noImplicitAny": false,
-    "sourceMap": false,
-    "baseUrl": "./src",
+    "pretty": true,
     "declaration": true,
-    "pretty": true
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noLib": false,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2018",
+    "sourceMap": false,
+    "outDir": "./build",
+    "baseUrl": "./src",
+    "rootDir": "./src",
+    "paths": {
+      "@app/*": ["./app/*"],
+      "@tests/*" : ["./test/*"]
+    }
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*.ts",
+    "./src/**/*.schema.json"
   ],
   "exclude": [
-      "node_modules"
+    "node_modules"
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "resource": "/",
+  "principal": "*",
+  "action": "GET",
+  "effect": "allow",
+  "specification": {}
+}

@@ -1,0 +1,9 @@
+{
+  "check-coverage": true,
+  "all": true,
+  "include": [
+    "build/app/**/*"
+  ],
+  "reporter": "html",
+  "exclude-after-remap": false
+}
