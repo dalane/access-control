@@ -2,7 +2,8 @@ import { ICompilePolicyResourceFunc, IResourceMatchFunc } from '@app/policy/reso
 import { ICompileSpecification, ISpecificationMatchFunc, ISpecification } from '@app/policy/specification';
 import { ICompileAction, IActionMatchFunc } from '@app/policy/action';
 import { ICompilePrincipal, IPrincipalMatchFunc } from '@app/policy/principal';
-import { assert } from '@app/helpers';
+import { assert, merge } from '@app/helpers';
+import { randomBytes } from 'crypto';
 
 /*
  * Compile policy
@@ -41,6 +42,7 @@ export interface ICompiledPolicy {
   isResourceSatisfied:IResourceMatchFunc;
   isSpecificationSatisfied:ISpecificationMatchFunc;
   obligations:any[];
+  source?:IPolicy;
 }
 
 export interface ICompilePolicySpecification {
@@ -87,18 +89,20 @@ export const compilePolicy:ICompilePolicy = (compileAction:ICompileAction):IComp
           assert(policy.action !== undefined, 'A value for action is required');
           assert(policy.resource !== undefined, 'A value for resource is required');
           assert(policy.specification !== undefined, 'A value for specification is required');
+          const id = policy.id ?? randomBytes(16).toString('hex');
           return {
             version: getPolicyVersion(policy),
-            extends: policy.extends || null,
-            path: policy.path || null,
-            id: policy.id || null,
-            name: policy.name || null,
-            description: policy.description || null,
+            extends: policy.extends ?? null,
+            path: policy.path ?? null,
+            id: policy.id,
+            name: policy.name ?? null,
+            description: policy.description ?? null,
             effect: getPolicyEffect(policy),
             isPrincipalSatisfied: compilePrincipal(policy.principal),
             isActionSatisfied: compileAction(policy.action),
             isResourceSatisfied: compileResource(policy.resource),
             isSpecificationSatisfied: compileSpecification(policy.specification),
-            obligations: policy.obligations || null
+            obligations: policy.obligations ?? null,
+            source: merge({}, policy, { id: id })
           };
 };

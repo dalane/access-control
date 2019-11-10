@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "resource": "/secure",
+  "principal": "anonymous",
+  "name": "Anonymous users are forbidden",
+  "action": "GET",
+  "effect": "deny",
+  "specification": {}
+}

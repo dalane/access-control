@@ -211,7 +211,7 @@ describe('Policy Decision Point', () => {
       const sut = policyDecisionPoint(fixture)(<IMatchCompiledPolicies><unknown>mockFindPoliciesMatchingAccessRequest)(mockPolicySetIsSatisfiedBy)(mockAccessRequest);
       assert.equal(sut.decision, ACCESS_DECISION.DENY, 'expected a deny decision');
       assert.equal(sut.messages.length, 1, 'Expected one message to be returned');
-      assert.equal(sut.messages[0], 'Failed "Allowed Policy Test 4"', 'expected the policy "Allow Test 4" to be the failing policy');
+      assert.equal(sut.messages[0], 'Allowed Policy Test 4', 'expected the policy "Allow Test 4" to be the failing policy');
     });
     it('returns an access allowed response if there are no denied policies in a policy set', () => {
       const fixtures:ICompiledPolicy[] = [

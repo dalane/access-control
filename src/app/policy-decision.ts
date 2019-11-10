@@ -1,12 +1,13 @@
-import { POLICY_EFFECT, ICompiledPolicy } from '@app/policy/policy';
-import { merge, throwAssertionError, assertIsDefined, assertIsBoolean } from './helpers';
+import { POLICY_EFFECT, ICompiledPolicy, IPolicy } from '@app/policy/policy';
+import { merge, assertIsBoolean } from './helpers';
 import { ACCESS_DECISION, IAccessResponse } from './access-response';
 import { IAccessRequest } from './access-request';
 
-const prepareResponse = (decision:ACCESS_DECISION) => (messages:string[]) => (obligations:any[]):IAccessResponse => ({
+const prepareResponse = (decision:ACCESS_DECISION) => (failedPolicies:IPolicy[] = []) => (messages:string[] = []) => (obligations:any[] = []):IAccessResponse => ({
   decision: decision,
   messages: messages,
-  obligations: obligations
+  obligations: obligations,
+  failedPolicies: failedPolicies
 });
 
 const _prepareObligationsResponse = (policySet, accessRequest, decision: ACCESS_DECISION):object[] => {
@@ -67,21 +68,23 @@ export const policySetIsSatisfiedBy:IIsSpecificationSatisfiedByAccessRequest = (
   }, []);
 };
 
-export const policyDecisionPoint = (policies:ICompiledPolicy[]) => (findPoliciesMatchingAccessRequest:IMatchCompiledPolicies) => (policySetIsSatisfiedBy:IIsSpecificationSatisfiedByAccessRequest) => (accessRequest:IAccessRequest) => {
+// TODO: return a list of the failed policies...
+export const policyDecisionPoint = (policies:ICompiledPolicy[]) => (findPoliciesMatchingAccessRequest:IMatchCompiledPolicies) => (policySetIsSatisfiedBy:IIsSpecificationSatisfiedByAccessRequest) => (accessRequest:IAccessRequest):IAccessResponse => {
   const policySet = findPoliciesMatchingAccessRequest(policies)(accessRequest);
   if (policySet.length === 0) {
-    return prepareResponse(ACCESS_DECISION.NOT_APPLICABLE)([ 'No valid policies found that match the request' ])([]);
+    return prepareResponse(ACCESS_DECISION.NOT_APPLICABLE)()([ 'No valid policies found that match the request' ])();
   }
   const denyPolicies = policySetIsSatisfiedBy(policySet)(accessRequest);
   // if there are any deny policies then we will reject the access request
   if (denyPolicies.length !== 0) {
     // deny the request as we deny by default or we
     // deny the request because we haven't passed all the checks
-    const messages = denyPolicies.map(policy => (policy.name) ? `Failed "${policy.name}"` : `Failed "${policy.path}"`);
-    return prepareResponse(ACCESS_DECISION.DENY)(messages)([]);
+    const messages = denyPolicies.map(policy => policy.name ?? policy.path);
+    const failedPolicies = denyPolicies.map(p => merge({}, p.source));
+    return prepareResponse(ACCESS_DECISION.DENY)(failedPolicies)(messages)([]);
   }
   // allow the request
-  return prepareResponse(ACCESS_DECISION.ALLOW)([])([]);
+  return prepareResponse(ACCESS_DECISION.ALLOW)()()();
 };
 
 export interface IMatchedPolicyResult {

@@ -6,7 +6,7 @@ require('source-map-support').install();
 const PORT = 8080;
 const authenticateRequest = cookie => {
   return {
-    id: null,
+    id: 'anonymous',
     name: 'Anonymous',
     groups: []
   };
