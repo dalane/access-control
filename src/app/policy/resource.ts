@@ -1,6 +1,6 @@
 import UrlPattern from 'url-pattern';
-import { IAccessRequest } from '@app/access-request';
-import { merge, assert, assertIsString, assertIsDefined } from '@app/helpers';
+import { IAccessRequest } from '../access-request';
+import { merge, assert, assertIsString, assertIsDefined } from '../helpers';
 
 export interface ICompilePolicyResourceFunc {
   (value:any):IResourceMatchFunc;

@@ -1,9 +1,25 @@
 {
+  "cache": false,
   "check-coverage": true,
   "all": true,
-  "include": [
-    "build/app/**/*"
+  "extension": [
+    ".ts"
   ],
-  "reporter": "html",
-  "exclude-after-remap": false
+  "exclude": [
+    "gulpfile.js",
+    "examples/**",
+    "**/fixtures/**",
+    "**/*.d.ts",
+    "coverage/**",
+    "packages/*/test/**",
+    "test/**",
+    "test{,-*}.ts",
+    "**/*{.,-}{test,spec}.ts",
+    "**/__tests__/**",
+    "**/node_modules/**"
+  ],
+  "require": [
+    "source-map-support/register"
+  ],
+  "reporter": "html"
 }

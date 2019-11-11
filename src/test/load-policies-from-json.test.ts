@@ -1,10 +1,10 @@
 import { assert } from 'chai';
-import { mergeExtendedPolicies, findPolicyFiles, loadFilesFromPaths } from '@app/load-policies-from-json';
-import { IPolicy, POLICY_EFFECT } from '@app/policy/policy';
+import { mergeExtendedPolicies, findPolicyFiles, loadFilesFromPaths } from '../app/load-policies-from-json';
+import { IPolicy, POLICY_EFFECT } from '../app/policy/policy';
 import { join } from 'path';
 
 describe('Loading policies from JSON files', () => {
-  const FIXTURES_BASE_PATH = join(process.cwd(), 'build/test/fixtures');
+  const FIXTURES_BASE_PATH = join(process.cwd(), 'examples/test');
   enum FIXTURE_FILES {
     TEST_1 = 'test1.policy.json',
     TEST_2 = 'test2.policy.json'

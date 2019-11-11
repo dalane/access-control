@@ -1,5 +1,5 @@
-import { getDeepValue, isEqualObject, throwAssertionError, assert, assertIsArray } from '@app/helpers';
-import { IAccessRequest } from '@app/access-request';
+import { getDeepValue, isEqualObject, assert, assertIsArray } from '../helpers';
+import { IAccessRequest } from '../access-request';
 
 export interface ISpecificationProperties {
   attribute:string;

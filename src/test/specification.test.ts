@@ -1,8 +1,8 @@
-import { ASSERTIONS, compileAssertion, COMPOSITES, compileSpecification, compileCompositeAssertion, ISpecification, anyOf, allOf, isIncluded } from "@app/policy/specification";
+import { ASSERTIONS, compileAssertion, COMPOSITES, compileSpecification, compileCompositeAssertion, ISpecification, anyOf, allOf, isIncluded } from "../app/policy/specification";
 import { assert } from 'chai';
-import { EmptyAccessRequest } from "@tests/fixtures/test-data";
-import { merge } from "@app/helpers";
-import { IAccessRequest } from "@app/access-request";
+import { EmptyAccessRequest } from "./fixtures/test-data";
+import { merge } from "../app/helpers";
+import { IAccessRequest } from "../app/access-request";
 
 describe("Compiling a specification", () => {
   describe('assertion functions', () => {

@@ -12,14 +12,10 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es2018",
-    "sourceMap": false,
+    "sourceMap": true,
     "outDir": "./build",
     "baseUrl": "./src",
-    "rootDir": "./src",
-    "paths": {
-      "@app/*": ["./app/*"],
-      "@tests/*" : ["./test/*"]
-    }
+    "rootDir": "./src"
   },
   "include": [
     "./src/**/*.ts",

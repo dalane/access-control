@@ -1,16 +1,16 @@
 {
   "name": "@dalane/barbican",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/app/index.js",
   "types": "build/app/index.d.ts",
   "scripts": {
-    "compile": "gulp",
+    "compile": "rm -rf ./build && tsc",
     "prepack": "yarn run compile",
     "pretest": "yarn run compile",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "example": "node ./examples/web/index.js",
-    "test": "mocha build/test/**/*.test.js"
+    "test": "nyc mocha"
   },
   "repository": {
     "type": "git",
@@ -28,19 +28,12 @@
     "url-pattern": "1.0.3"
   },
   "devDependencies": {
-    "@istanbuljs/nyc-config-typescript": "^0.1.3",
     "@types/chai": "4.2.3",
     "@types/mocha": "5.2.7",
     "@types/node": "12.11.1",
     "chai": "4.2.0",
-    "del": "5.1.0",
-    "gulp": "4.0.2",
-    "gulp-sourcemaps": "^2.6.5",
-    "gulp-ts-alias": "1.1.0",
-    "gulp-typescript": "5.0.1",
     "mocha": "6.2.2",
     "nyc": "14.1.1",
-    "pump": "3.0.0",
     "source-map-support": "0.5.13",
     "tslint": "5.20.1",
     "typescript": "3.7.2"

@@ -1,7 +1,8 @@
 import { assert } from 'chai';
-import { compileCommandQueryAction, compileHttpAction } from '@app/policy/action';
-import { EmptyAccessRequest } from '@tests/fixtures/test-data';
-import { merge } from '@app/helpers';
+import { compileCommandQueryAction, compileHttpAction } from '../app/policy/action';
+import { EmptyAccessRequest } from './fixtures/test-data';
+import { merge } from '../app/helpers';
+import { IAccessRequest } from '../app/access-request';
 
 describe('Compiling a policy action', () => {
   describe('#compileCommandQueryAction returns a function that matches the policy action to a request action using coomand/query names', () => {
@@ -45,9 +46,24 @@ describe('Compiling a policy action', () => {
     });
   });
   describe('#compileHttpAction returns a function that matches the policy action to a request action using http verbs', () => {
-    it.skip('throws an error if the value is not a string');
-    it.skip('throws an error if the action is not a HTTP verb');
-    it.skip('throws an error if the access request is missing .action.method property');
-
+    it('throws an error if the value is not a string', () => {
+      const itThrows = () => compileHttpAction({});
+      assert.throws(itThrows, 'The value for the policy action must be a string HTTP verb');
+    });
+    it('throws an error if the action is not a HTTP verb', () => {
+      const itThrows = () => compileHttpAction('CATCH');
+      assert.throws(itThrows, 'The value for action should be "GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS", or "*"');
+    });
+    it('returns false if the access request is missing .action.method property', () => {
+      const mockAccessRequest = <IAccessRequest><unknown>{};
+      const sut = compileHttpAction('GET')(mockAccessRequest);
+      assert.hasAnyKeys(sut, ['result'], 'Expected the result to be an object with a key "result"');
+      assert.isFalse(sut.result, 'Expected the ey "result" to have the value false');
+    });
+    it('returns true for any access request where the resource is a wildcard', () => {
+      const sut = compileHttpAction('*');
+      const mockAccessRequest = <IAccessRequest><unknown>{};
+      assert.isTrue(sut(mockAccessRequest).result, 'Expected a wild card to return true for any access request');
+    });
   });
 });

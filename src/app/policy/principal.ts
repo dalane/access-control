@@ -1,5 +1,5 @@
-import { IAccessRequest } from "@app/access-request";
-import { assert } from "@app/helpers";
+import { IAccessRequest } from "../access-request";
+import { assert } from "../helpers";
 
 export interface ICompilePrincipal {
   (value:any):IPrincipalMatchFunc;

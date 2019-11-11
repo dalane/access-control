@@ -1,4 +1,4 @@
-import { POLICY_EFFECT, ICompiledPolicy, IPolicy } from '@app/policy/policy';
+import { POLICY_EFFECT, ICompiledPolicy, IPolicy } from './policy/policy';
 import { merge, assertIsBoolean } from './helpers';
 import { ACCESS_DECISION, IAccessResponse } from './access-response';
 import { IAccessRequest } from './access-request';
@@ -110,7 +110,7 @@ export interface IMatchAccessRequestToPolicy {
   (accessRequest:IAccessRequest):IMatchedPolicyResult[];
 }
 
-export const findPoliciesMatchingAccessRequest:IMatchCompiledPolicies = (compiledPolicies:ICompiledPolicy[]):IMatchAccessRequestToPolicy => (accessRequest:IAccessRequest):IMatchedPolicyResult[] => {
+export const findPolicySet:IMatchCompiledPolicies = (compiledPolicies:ICompiledPolicy[]):IMatchAccessRequestToPolicy => (accessRequest:IAccessRequest):IMatchedPolicyResult[] => {
   return compiledPolicies.reduce((policySet:any[], compiledPolicy:ICompiledPolicy) => {
     const principalResult = compiledPolicy.isPrincipalSatisfied(accessRequest);
     assertIsBoolean(principalResult.result, 'Expected the compiled policy to return a "result" property with a boolean value to "#isPrincipalSatisfied"');

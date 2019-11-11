@@ -1,9 +1,8 @@
-import { ICompilePolicyResourceFunc, IResourceMatchFunc } from '@app/policy/resource';
-import { ICompileSpecification, ISpecificationMatchFunc, ISpecification } from '@app/policy/specification';
-import { ICompileAction, IActionMatchFunc } from '@app/policy/action';
-import { ICompilePrincipal, IPrincipalMatchFunc } from '@app/policy/principal';
-import { assert, merge } from '@app/helpers';
-import { randomBytes } from 'crypto';
+import { ICompilePolicyResourceFunc, IResourceMatchFunc } from './resource';
+import { ICompileSpecification, ISpecificationMatchFunc, ISpecification } from './specification';
+import { ICompileAction, IActionMatchFunc } from './action';
+import { ICompilePrincipal, IPrincipalMatchFunc } from './principal';
+import { assert, merge } from '../helpers';
 
 /*
  * Compile policy
@@ -89,7 +88,7 @@ export const compilePolicy:ICompilePolicy = (compileAction:ICompileAction):IComp
           assert(policy.action !== undefined, 'A value for action is required');
           assert(policy.resource !== undefined, 'A value for resource is required');
           assert(policy.specification !== undefined, 'A value for specification is required');
-          const id = policy.id ?? randomBytes(16).toString('hex');
+          const id = policy.id ?? null;
           return {
             version: getPolicyVersion(policy),
             extends: policy.extends ?? null,

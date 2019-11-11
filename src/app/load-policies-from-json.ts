@@ -1,5 +1,5 @@
-import { fullPathToParent, assign, findPathsByPattern, isFile, readJsonFile, merge } from '@app/helpers';
-import { IPolicy } from '@app/policy/policy';
+import { fullPathToParent, assign, findPathsByPattern, isFile, readJsonFile, merge } from './helpers';
+import { IPolicy } from './policy/policy';
 
 export const findPolicyFiles = (basePath:string):Promise<string[]> => {
   return findPathsByPattern(basePath)('**/*.policy.json');

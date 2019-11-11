@@ -1,12 +1,12 @@
-import { loadJsonPolicyFiles } from '@app/load-policies-from-json';
-import { IPolicy, ICompilePolicy, ICompilePolicyAction, ICompilePolicyPrincipal, ICompilePolicyResource, ICompilePolicySpecification, ICompiledPolicy, POLICY_EFFECT, compilePolicy } from '@app/policy/policy';
-import { ICompileAssertion, ICompositeAssertions, IAssertions, IAssertionFunction, ASSERTIONS, compileAssertion, COMPOSITES, compileSpecification, compileCompositeAssertion, ISpecification, ICompileSpecification, ISpecificationMatchFunc } from "@app/policy/specification";
-import { IAccessRequest } from '@app/access-request';
-import { ACCESS_DECISION, IAccessResponse } from '@app/access-response';
-import { policyDecisionPoint, policySetIsSatisfiedBy, IMatchedPolicyResult, findPoliciesMatchingAccessRequest, IMatchCompiledPolicies } from '@app/policy-decision';
-import { IPrincipalMatchResult, IPrincipalMatchFunc, ICompilePrincipal,compileUserIdPrincipal } from '@app/policy/principal';
-import { compileCommandQueryAction, compileHttpAction, ICompileAction, IActionMatchFunc, IActionMatchResult } from '@app/policy/action';
-import { ICompilePolicyResourceFunc, IResourceMatchFunc, IResourceMatchResult, compileUrlPatternResource } from '@app/policy/resource';
+import { loadJsonPolicyFiles } from './load-policies-from-json';
+import { IPolicy, ICompilePolicy, ICompilePolicyAction, ICompilePolicyPrincipal, ICompilePolicyResource, ICompilePolicySpecification, ICompiledPolicy, POLICY_EFFECT, compilePolicy } from './policy/policy';
+import { ICompileAssertion, ICompositeAssertions, IAssertions, IAssertionFunction, ASSERTIONS, compileAssertion, COMPOSITES, compileSpecification, compileCompositeAssertion, ISpecification, ICompileSpecification, ISpecificationMatchFunc } from "./policy/specification";
+import { IAccessRequest } from './access-request';
+import { ACCESS_DECISION, IAccessResponse } from './access-response';
+import { policyDecisionPoint, policySetIsSatisfiedBy, IMatchedPolicyResult, findPolicySet, IMatchCompiledPolicies } from './policy-decision';
+import { IPrincipalMatchResult, IPrincipalMatchFunc, ICompilePrincipal,compileUserIdPrincipal } from './policy/principal';
+import { compileCommandQueryAction, compileHttpAction, ICompileAction, IActionMatchFunc, IActionMatchResult } from './policy/action';
+import { ICompilePolicyResourceFunc, IResourceMatchFunc, IResourceMatchResult, compileUrlPatternResource } from './policy/resource';
 
 export { loadJsonPolicyFiles };
 export { POLICY_EFFECT, IPolicy, ICompiledPolicy, ICompilePolicySpecification, ICompilePolicyPrincipal, ICompilePolicyResource, ICompilePolicyAction, ICompilePolicy, compilePolicy };
@@ -41,5 +41,5 @@ export const createDefaultPolicyDecisionPoint = async (basePath:string) => {
   // policies will be matched based on command-query action name, url pattern resource path  and a user-id property in subject...
   const compilePolicyFunc = compilePolicy(ACTION_COMPILERS.compileHttpAction)(RESOURCE_COMPILERS.compileUrlPatternResource)(PRINCIPAL_COMPILERS.compileUserIdPrincipal)(compileSpecFunc);
   const compiledPolicies = loadedFilePolicies.map(compilePolicyFunc);
-  return policyDecisionPoint(compiledPolicies)(findPoliciesMatchingAccessRequest)(policySetIsSatisfiedBy);
+  return policyDecisionPoint(compiledPolicies)(findPolicySet)(policySetIsSatisfiedBy);
 };

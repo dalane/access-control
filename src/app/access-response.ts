@@ -1,4 +1,4 @@
-import { IPolicy } from "@app/policy/policy";
+import { IPolicy } from "./policy/policy";
 
 export enum ACCESS_DECISION {
   ALLOW = 'ALLOW',

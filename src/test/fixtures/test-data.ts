@@ -1,5 +1,5 @@
-import { IAccessRequest } from "@app/access-request";
-import { IPolicy, POLICY_EFFECT, ICompiledPolicy } from "@app/policy/policy";
+import { IAccessRequest } from "../../app/access-request";
+import { IPolicy, POLICY_EFFECT, ICompiledPolicy } from "../../app/policy/policy";
 
 export const EmptyAccessRequest:IAccessRequest = {
   action: {},

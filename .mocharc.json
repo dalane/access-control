@@ -1,3 +1,5 @@
 {
-  "extension": ["js"]
+  "spec": [
+    "build/test/**/*.test.js"
+  ]
 }

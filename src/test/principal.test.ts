@@ -1,9 +1,8 @@
-// require('source-map-support').install();
 import { assert } from 'chai';
-import { compileUserIdPrincipal } from '@app/policy/principal';
-import { EmptyAccessRequest } from '@tests/fixtures/test-data';
-import { merge } from '@app/helpers';
-import { IAccessRequest } from '@app/access-request';
+import { compileUserIdPrincipal } from '../app/policy/principal';
+import { EmptyAccessRequest } from './fixtures/test-data';
+import { merge } from '../app/helpers';
+import { IAccessRequest } from '../app/access-request';
 
 describe('compiling a policy principal', () => {
   describe('#compileUserIdPrincipal returns a function that matches the policy principal to a request subject', () => {

@@ -128,19 +128,6 @@ is not a system generated identifier.
 }
 ```
 
-#### Extending Policies
-
-Using the optional ```extends``` property. Policies can be merged from parent
-policies allowing you to create common policy files and then merge them into one.
-This is done by specifying the path to the parent file either using an absolute
-path or a relative path.
-
-```json
-{
-  "extends": "<path-to-parent-policy-file>"
-}
-```
-
 #### Principal
 
 The principal element of the policy allows you to target a policy to a user or a
@@ -571,6 +558,19 @@ const policySet = policies.filter(policyMatcher);
 const policyDecisionPoint = createPolicyDecisionPoint(policySet);
 const accessResponse = policyDecisionPoint(accessRequest);
 
+```
+
+### Poicy inheritance with ```extends```
+
+Using the optional ```extends``` property. Policies can be merged from parent
+policies allowing you to create common policy files and then merge them into one.
+This is done by specifying the path to the parent file either using an absolute
+path or a relative path.
+
+```json
+{
+  "extends": "<path-to-parent-policy-file>"
+}
 ```
 
 ## Access Request

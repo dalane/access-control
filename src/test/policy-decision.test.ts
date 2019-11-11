@@ -1,13 +1,13 @@
 import { assert } from 'chai';
-import { CompiledAllowPolicy, CompiledDenyPolicy } from '@tests/fixtures/test-data';
-import { policyDecisionPoint, policySetIsSatisfiedBy, IMatchedPolicyResult, findPoliciesMatchingAccessRequest, IMatchCompiledPolicies } from '@app/policy-decision';
-import { ICompiledPolicy } from '@app/policy/policy';
-import { merge } from '@app/helpers';
-import { IAccessRequest } from '@app/access-request';
-import { ACCESS_DECISION } from '@app/access-response';
+import { CompiledAllowPolicy, CompiledDenyPolicy } from './fixtures/test-data';
+import { policyDecisionPoint, policySetIsSatisfiedBy, IMatchedPolicyResult, findPolicySet, IMatchCompiledPolicies } from '../app/policy-decision';
+import { ICompiledPolicy } from '../app/policy/policy';
+import { merge } from '../app/helpers';
+import { IAccessRequest } from '../app/access-request';
+import { ACCESS_DECISION } from '../app/access-response';
 
 describe('Policy Decision Point', () => {
-  describe('#findPoliciesMatchingAccessRequest function returns a policy set', () => {
+  describe('finding a policy set from an access request', () => {
     it('throws an error if the policy\'s #isPrincipalSatisfied is not correctly formatted', () => {
       // four policies provided to the SUT, only one should be returned that
       // returns true on principal, action and resource...
@@ -19,7 +19,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = <IAccessRequest><unknown>{};
-      const itThrows = () => findPoliciesMatchingAccessRequest(compiledPolicies)(mockAccessRequest);
+      const itThrows = () => findPolicySet(compiledPolicies)(mockAccessRequest);
       assert.throws(itThrows, 'Expected the compiled policy to return a "result" property with a boolean value to "#isPrincipalSatisfied"');
     });
     it('throws an error if the policy\'s #isActionSatisfied is not correctly formatted', () => {
@@ -33,7 +33,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = <IAccessRequest><unknown>{};
-      const itThrows = () => findPoliciesMatchingAccessRequest(compiledPolicies)(mockAccessRequest);
+      const itThrows = () => findPolicySet(compiledPolicies)(mockAccessRequest);
       assert.throws(itThrows, 'Expected the compiled policy to return a "result" property with a boolean value to "#isActionSatisfied"');
     });
     it('throws an error if the policy\'s #isResourceSatisfied is not correctly formatted', () => {
@@ -47,7 +47,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = <IAccessRequest><unknown>{};
-      const itThrows = () => findPoliciesMatchingAccessRequest(compiledPolicies)(mockAccessRequest);
+      const itThrows = () => findPolicySet(compiledPolicies)(mockAccessRequest);
       assert.throws(itThrows, 'Expected the compiled policy to return a "result" property with a boolean value to "#isResourceSatisfied"');
     });
     it('returns a set of policies that match the access request on resource, principal and action', () => {
@@ -71,7 +71,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = <IAccessRequest><unknown>{};
-      const sut = findPoliciesMatchingAccessRequest(compiledPolicies)(mockAccessRequest);
+      const sut = findPolicySet(compiledPolicies)(mockAccessRequest);
       assert.isArray(sut, 'Expected an array to be returned');
       assert.equal(sut.length, 1, 'Expected only one record to be returned');
       assert.equal(sut[0].policy.name, CompiledAllowPolicy.name, 'Expected the policy name to match the fixture');

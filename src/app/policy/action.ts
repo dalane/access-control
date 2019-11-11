@@ -1,5 +1,5 @@
-import { IAccessRequest } from "@app/access-request";
-import { assertIsString, assert } from "@app/helpers";
+import { IAccessRequest } from "../access-request";
+import { assertIsString, assert } from "../helpers";
 
 export interface ICompileAction {
   (value:any):IActionMatchFunc;
@@ -23,7 +23,7 @@ const makeMatchResult = (result:boolean, params:object = {}):IActionMatchResult 
 
 export const compileHttpAction:ICompileAction = (value:string):IActionMatchFunc => {
   const supportedActions = ['GET', 'POST', 'PATCH', 'DELETE', "PUT", "OPTIONS"];
-  assertIsString(value, 'The value for the policy action must be a string');
+  assertIsString(value, 'The value for the policy action must be a string HTTP verb');
   if (value === '*') {
     return (accessRequest:IAccessRequest) => makeMatchResult(true);
   } else {

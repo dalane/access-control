@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import { compileUrlPatternResource } from '@app/policy/resource';
-import { EmptyAccessRequest } from '@tests/fixtures/test-data';
-import { merge } from '@app/helpers';
+import { compileUrlPatternResource } from '../app/policy/resource';
+import { EmptyAccessRequest } from './fixtures/test-data';
+import { merge } from '../app/helpers';
 
 describe('compiling a resouce', () => {
   describe('#compileUrlPatternResource returns a function that matches the policy principal to a request subject', () => {

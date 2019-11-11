@@ -1,13 +1,12 @@
-// require('source-map-support').install();
 import { assert } from 'chai';
-import { compilePolicy, IPolicy } from '@app/policy/policy';
-import { IAccessRequest } from '@app/access-request';
-import { IPrincipalMatchResult, IPrincipalMatchFunc, ICompilePrincipal } from '@app/policy/principal';
-import { ICompileAction, IActionMatchFunc, IActionMatchResult } from '@app/policy/action';
-import { ICompilePolicyResourceFunc, IResourceMatchFunc, IResourceMatchResult } from '@app/policy/resource';
-import { ICompileSpecification, ISpecificationMatchFunc } from '@app/policy/specification';
-import { DefaultPolicy } from '@tests/fixtures/test-data';
-import { merge } from '@app/helpers';
+import { compilePolicy, IPolicy } from '../app/policy/policy';
+import { IAccessRequest } from '../app/access-request';
+import { IPrincipalMatchResult, IPrincipalMatchFunc, ICompilePrincipal } from '../app/policy/principal';
+import { ICompileAction, IActionMatchFunc, IActionMatchResult } from '../app/policy/action';
+import { ICompilePolicyResourceFunc, IResourceMatchFunc, IResourceMatchResult } from '../app/policy/resource';
+import { ICompileSpecification, ISpecificationMatchFunc } from '../app/policy/specification';
+import { DefaultPolicy } from './fixtures/test-data';
+import { merge } from '../app/helpers';
 
 describe('compiling a policy', () => {
   // these functions allow us to inject a mock result that is returned to the calling
