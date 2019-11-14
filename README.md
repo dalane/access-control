@@ -95,7 +95,7 @@ Or they can be created using Plain Javascript Objects using the same structure.
 
 ### Minimum requirements in a policy
 
-A policy must contain the following minimum properties:
+A policy must contain the following minimum properties in order to work.
 
 - version
 - id
@@ -480,8 +480,11 @@ be utilised with the ```"isIncluded"``` and ```"isNotIncluded"``` rule
 specifications. We don't yet support accessing array attributes by index.
 
 ## Obligations
+
+*** THIS IS NOT YET IMPLEMENTED ***
+
 You can specify in a policy, actions that you would like the policy execution point to undertake.
-These are known as obligations. They can be specified be fulfilled on either "Allow" or
+These are known as obligations. They can be specified to be fulfilled on either "Allow" or
 "Deny" decisions. An obligation is an action that the PEP must complete and if it can't it must return an error.
 
 A common example given is when a doctor accesses a patient's record, the patient is sent an email.
@@ -530,34 +533,6 @@ An obligation that is returned with the decision looks like the following...
     }
   ]
 }
-```
-
-```typescript
-import { loadJsonPolicies, createPolicyMatcher, createPolicyDecisionPoint, IAccessRequest } from "@dalane/barbican";
-
-const accessRequest:IAccessRequest = {
-  action: {
-    type: 'create-issue'
-  },
-  subject: {
-    userId: request.authenticatedUser.id
-  },
-  resource: {
-    id: '/api/users'
-  },
-  environment: {
-    ip: "192.0.2.1",
-  }
-};
-// policyMatcher is a function that matches a policy to the access request.
-// You can use ours or create your own function.
-const pathToPolicies = "/var/policies";
-const policies = await loadJsonPolicies(pathToPolicies);
-const policyMatcher = createPolicyMatcher(accessRequest);
-const policySet = policies.filter(policyMatcher);
-const policyDecisionPoint = createPolicyDecisionPoint(policySet);
-const accessResponse = policyDecisionPoint(accessRequest);
-
 ```
 
 ### Poicy inheritance with ```extends```
@@ -650,15 +625,25 @@ interface IFoundPolicy {
 }
 ```
 
-For you convenience, we've provided a function that takes the policies and an
-access request returning a filterPolicies(policies, reducer)
+For you convenience, we've provided a function ```findPolicySet``` that iterates
+through the compiled policies and validates them to the access request.
 
 ```typescript
-import { matchPolicy } from "@dalane/barbican";
+import { findPolicySet } from "@dalane/barbican";
 
 const policies = [...]; // an array containing the compiled policies...
-const policySet = policies.map(matchPolicy);
+const pdp = policyDecisionPoint();
 ```
+
+If the following properties:
+
+- principal
+- resource
+- action
+
+are missing from the policy (for example, in base policies that you are using
+to extend other policies) then that policy will not be included in any policy set as
+these will return false on any request to match to an access request.
 
 ## Access Response
 

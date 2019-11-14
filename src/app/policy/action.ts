@@ -1,40 +1,28 @@
 import { IAccessRequest } from "../access-request";
 import { assertIsString, assert } from "../helpers";
+import { IIsSatisfiedByFunction, makeIsSatisfiedByResult } from ".";
 
 export interface ICompileAction {
-  (value:any):IActionMatchFunc;
+  (value:any):IIsSatisfiedByFunction;
 }
 
-export interface IActionMatchResult {
-  result:boolean;
-  params?:{
-    [key:string]:any
-  };
-}
-
-export interface IActionMatchFunc {
-  (accessRequest:IAccessRequest):IActionMatchResult;
-}
-
-const makeMatchResult = (result:boolean, params:object = {}):IActionMatchResult => ({
-  result: result,
-  params: params
-});
-
-export const compileHttpAction:ICompileAction = (value:string):IActionMatchFunc => {
+export const compileHttpAction:ICompileAction = (value:string) => {
   const supportedActions = ['GET', 'POST', 'PATCH', 'DELETE', "PUT", "OPTIONS"];
+  if (undefined === value) {
+    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(false);
+  }
   assertIsString(value, 'The value for the policy action must be a string HTTP verb');
   if (value === '*') {
-    return (accessRequest:IAccessRequest) => makeMatchResult(true);
+    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(true);
   } else {
     const policyAction = value.toUpperCase();
     assert(supportedActions.includes(policyAction), 'The value for action should be "GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS", or "*"');
-    return (accessRequest:IAccessRequest):IActionMatchResult => {
+    return (accessRequest:IAccessRequest) => {
       const requestedAction = accessRequest?.action?.method;
       if (requestedAction === undefined) {
-        return makeMatchResult(false);
+        return makeIsSatisfiedByResult(false);
       }
-      return (policyAction === requestedAction.toUpperCase()) ? makeMatchResult(true) : makeMatchResult(false);
+      return (policyAction === requestedAction.toUpperCase()) ? makeIsSatisfiedByResult(true) : makeIsSatisfiedByResult(false);
     };
   }
 };
@@ -45,7 +33,7 @@ export const compileHttpAction:ICompileAction = (value:string):IActionMatchFunc 
  * "command:<command-name>", "command:*", or "*"
  * @param value The policy action
  */
-export const compileCommandQueryAction:ICompileAction = (value:string):IActionMatchFunc => {
+export const compileCommandQueryAction:ICompileAction = (value:string) => {
   let isTypeMatch;
   let isNameMatch;
   if (value === '*') {
@@ -60,27 +48,20 @@ export const compileCommandQueryAction:ICompileAction = (value:string):IActionMa
     isTypeMatch = (requestedAction:string) => (policyActionType.toLowerCase() === requestedAction.toLowerCase());
     isNameMatch = (requestedAction:string) => (policyActionName === '*') ? true : (policyActionName === requestedAction);
   }
-  return (accessRequest:IAccessRequest):IActionMatchResult => {
+  return (accessRequest:IAccessRequest) => {
     const requestedAction = accessRequest?.action?.name;
     const parts = requestedAction.split(':');
     if (parts.length !== 2) {
-      return {
-        result: false
-      };
+      return makeIsSatisfiedByResult(false);
     }
     const [ requestedType, requestedName ] = parts;
     if (isTypeMatch(requestedType.toLowerCase()) && isNameMatch(requestedName)) {
-      return {
-        result: true,
-        params: {
-          type: requestedType,
-          name: requestedName
-        }
-      };
+      return makeIsSatisfiedByResult(true, {
+        type: requestedType,
+        name: requestedName
+      });
     } else {
-      return {
-        result: false
-      };
+      return makeIsSatisfiedByResult(false);
     }
   };
 };

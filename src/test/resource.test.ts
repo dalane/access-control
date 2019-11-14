@@ -1,14 +1,10 @@
-import { assert } from 'chai';
-import { compileUrlPatternResource } from '../app/policy/resource';
-import { EmptyAccessRequest } from './fixtures/test-data';
 import { merge } from '../app/helpers';
+import { compileUrlPatternResource } from '../app/policy/resource';
+import { assert } from 'chai';
+import { EmptyAccessRequest } from './fixtures/test-data';
 
-describe('compiling a resouce', () => {
+describe('compiling a resource', () => {
   describe('#compileUrlPatternResource returns a function that matches the policy principal to a request subject', () => {
-    it('throws an error if the value for the resource is missing', () => {
-      const itThrows = () => compileUrlPatternResource(undefined);
-      assert.throws(itThrows, 'The value for the resource is missing');
-    });
     it('throws an error if the value for the resource is not a string', () => {
       const itThrows = () => compileUrlPatternResource({});
       assert.throws(itThrows, 'The value for the resource must be a string');
@@ -17,12 +13,18 @@ describe('compiling a resouce', () => {
       const itThrows = () => compileUrlPatternResource('');
       assert.throws(itThrows, 'The value for the resource is an empty string');
     });
+    it('it compiles an undefined value but returns false when passed an access request', () => {
+      const sut = compileUrlPatternResource(undefined);
+      const mockAccessRequest = merge({}, EmptyAccessRequest, { resource: { path: '/path/1234' }});
+      const result = sut(mockAccessRequest);
+      assert.isFalse(result.result, 'expected to get a false result');
+    });
     it('it compiles a wildcard successfully and returns the expected result when passed an access request', () => {
       const sut = compileUrlPatternResource('*');
       const mockAccessRequest = merge({}, EmptyAccessRequest, { resource: { path: '/path/1234' }});
       const successResult = sut(mockAccessRequest);
       assert.isTrue(successResult.result, 'Expected result to be true for matched path');
-      assert.equal(Object.getOwnPropertyNames(successResult.params).length, 0, 'Expected there to be no params to returned');
+      assert.isUndefined(successResult.params, 'Expected there to be no params to returned');
     });
     it('it compiles a root path pattern successfully and returns the expected result when passed an access request', () => {
       const sut = compileUrlPatternResource('/');

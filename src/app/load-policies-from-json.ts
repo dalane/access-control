@@ -1,7 +1,8 @@
-import { fullPathToParent, assign, findPathsByPattern, isFile, readJsonFile, merge } from './helpers';
-import { IPolicy } from './policy/policy';
+import { assign, findPathsByPattern, isFile, merge, assertIsString, readFile } from './helpers';
+import { IPolicy } from './policy/index';
+import { join } from 'path';
 
-export const findPolicyFiles = (basePath:string):Promise<string[]> => {
+export const findPolicyFiles = async (basePath:string):Promise<string[]> => {
   return findPathsByPattern(basePath)('**/*.policy.json');
 };
 
@@ -57,4 +58,42 @@ export const getParentPolicies = (allLoadedPolicies) => {
       return [];
     }
   };
+};
+
+const isAbsolutePath = (path:string) => (path.substr(0, 1) === '/');
+const removeFileNameFromPath = (path) => path.substr(0, path.lastIndexOf('/'));
+
+
+/**
+ * we will create a new path by joining the current policy's path
+ * to the path in the extend property. This is identified by
+ * whether the path begins with a "." e.g. "extends": "../../another.policy.json"
+ */
+export const fullPathToParent = (pathToPolicy:string) => (extendsPathToParent:string) => {
+  if (isAbsolutePath(extendsPathToParent)) {
+    return extendsPathToParent;
+  }
+  // first off we need to remove the file name so that we've just got the directory name
+  const directoryOfCurrentPolicy = removeFileNameFromPath(pathToPolicy);
+  return join(directoryOfCurrentPolicy, extendsPathToParent);
+};
+
+const getFileExtension = (path:string) => {
+  assertIsString(path, 'fileName must be a string');
+  const extensionSeperatorIndex =  path.lastIndexOf('.');
+  // if the index is -1 there is no separator, if it's 0 then it's a dotfile...
+  return (extensionSeperatorIndex < 1) ? '' : path.substr(extensionSeperatorIndex + 1);
+};
+
+export const readJsonFile = async (path:string) => {
+  const extension = getFileExtension(path);
+  if (extension !== 'json') {
+    throw new Error('The path to the config file must refer to a JSON file.');
+  }
+  try {
+    const text = await readFile(path);
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error('The config file contains invalid JSON.');
+  }
 };

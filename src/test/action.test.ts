@@ -55,14 +55,14 @@ describe('Compiling a policy action', () => {
       assert.throws(itThrows, 'The value for action should be "GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS", or "*"');
     });
     it('returns false if the access request is missing .action.method property', () => {
-      const mockAccessRequest = <IAccessRequest><unknown>{};
+      const mockAccessRequest = {} as unknown as IAccessRequest;
       const sut = compileHttpAction('GET')(mockAccessRequest);
       assert.hasAnyKeys(sut, ['result'], 'Expected the result to be an object with a key "result"');
       assert.isFalse(sut.result, 'Expected the ey "result" to have the value false');
     });
     it('returns true for any access request where the resource is a wildcard', () => {
       const sut = compileHttpAction('*');
-      const mockAccessRequest = <IAccessRequest><unknown>{};
+      const mockAccessRequest = {} as unknown as IAccessRequest;
       assert.isTrue(sut(mockAccessRequest).result, 'Expected a wild card to return true for any access request');
     });
   });

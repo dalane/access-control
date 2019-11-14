@@ -6,23 +6,25 @@ import { IAccessRequest } from '../app/access-request';
 
 describe('compiling a policy principal', () => {
   describe('#compileUserIdPrincipal returns a function that matches the policy principal to a request subject', () => {
-    it('throws an error if there is no value for principal', () => {
-      const itThrows = () => compileUserIdPrincipal(undefined);
-      assert.throws(itThrows, 'The policy principal is missing');
-    });
     it('throws an error if the value for principal is not a string', () => {
       const itThrows = () => compileUserIdPrincipal({});
       assert.throws(itThrows, 'The value of the policy principal must be a string');
     });
-    it('returns ture for any user-id when the policy resource value is wildcard "*"', () => {
+    it('returns false for any user-id when the policy resource value is undefined', () => {
+      const sut = compileUserIdPrincipal(undefined);
+      const mockAccessRequest = {} as unknown as IAccessRequest;
+      assert.isFunction(sut, 'expected a function');
+      assert.isFalse(sut(mockAccessRequest).result, 'Expected a wildcard to return true for any user-id');
+    });
+    it('returns true for any user-id when the policy resource value is wildcard "*"', () => {
       const sut = compileUserIdPrincipal('*');
       assert.isFunction(sut, 'expected a function');
       assert.isTrue(sut(merge({}, EmptyAccessRequest, { subject: { 'user-id': 'test' }})).result, 'Expected a wildcard to return true for any user-id');
     });
-    it('returns ture for when there is no user-id but the policy resource value is wildcard "*"', () => {
+    it('returns true for when there is no user-id but the policy resource value is wildcard "*"', () => {
       const sut = compileUserIdPrincipal('*');
       assert.isFunction(sut, 'expected a function');
-      const mockAccessRequest = <IAccessRequest><unknown>{};
+      const mockAccessRequest = {} as unknown as IAccessRequest;
       assert.isTrue(sut(mockAccessRequest).result, 'Expected a wildcard to return true for when there is no user-id or user-id path');
     });
     it('successfully compiles a principal when the value is a string', () => {

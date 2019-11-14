@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "resource": "/logout",
+  "principal": "anonymous",
+  "name": "Only Logged In Users Can Logout",
+  "action": "GET",
+  "effect": "deny",
+  "specification": {}
+}

@@ -1,38 +1,23 @@
 import { IAccessRequest } from "../access-request";
 import { assert } from "../helpers";
+import { IIsSatisfiedByFunction, makeIsSatisfiedByResult } from "./index";
 
-export interface ICompilePrincipal {
-  (value:any):IPrincipalMatchFunc;
-}
+export type CompilePrincipalFunc = (value:any) => IIsSatisfiedByFunction;
 
-export interface IPrincipalMatchResult {
-  result:boolean;
-  params?:{
-    [key:string]:any
-  };
-}
-
-export interface IPrincipalMatchFunc {
-  (accessRequest:IAccessRequest):IPrincipalMatchResult;
-}
-
-const makeMatchResult = (result:boolean, params:object = {}):IPrincipalMatchResult => ({
-  result: result,
-  params: params
-});
-
-export const compileUserIdPrincipal:ICompilePrincipal = (value:string):IPrincipalMatchFunc => {
-  assert(undefined !== value, 'The policy principal is missing');
+export const compileUserIdPrincipal:CompilePrincipalFunc = (value:string):IIsSatisfiedByFunction => {
+  if (undefined === value) {
+    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(false);
+  }
   assert('string' === typeof value, 'The value of the policy principal must be a string');
   if (value === '*') {
-    return (accessRequest:IAccessRequest) => makeMatchResult(true);
+    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(true);
   } else {
-    return (accessRequest:IAccessRequest):IPrincipalMatchResult => {
+    return (accessRequest:IAccessRequest) => {
       const requestedUserId = accessRequest?.subject?.['user-id'];
       if (requestedUserId === undefined) {
-        return makeMatchResult(false);
+        return makeIsSatisfiedByResult(false);
       }
-      return (value === requestedUserId) ? makeMatchResult(true) : makeMatchResult(false);
+      return (value === requestedUserId) ? makeIsSatisfiedByResult(true) : makeIsSatisfiedByResult(false);
     };
   }
 };

@@ -1,6 +1,7 @@
 {
   "version": 1,
   "resource": "/",
+  "name": "Any User Permitted",
   "principal": "*",
   "action": "GET",
   "effect": "allow",

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "resource": "/login",
+  "principal": "anonymous",
+  "name": "Anonymous Users Only Can Login",
+  "description": "Anonymous users are allowed, logged in users are forbidden",
+  "action": "GET",
+  "effect": "allow",
+  "specification": {}
+}

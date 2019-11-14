@@ -13,13 +13,10 @@
     "experimentalDecorators": true,
     "target": "es2018",
     "sourceMap": true,
-    "outDir": "./build",
-    "baseUrl": "./src",
-    "rootDir": "./src"
+    "outDir": "./build"
   },
   "include": [
     "./src/**/*.ts",
-    "./src/**/*.schema.json"
   ],
   "exclude": [
     "node_modules"

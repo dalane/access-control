@@ -1,5 +1,7 @@
 import { IAccessRequest } from "../../app/access-request";
-import { IPolicy, POLICY_EFFECT, ICompiledPolicy } from "../../app/policy/policy";
+import { IPolicy, POLICY_EFFECT, ICompiledPolicy } from "../../app/policy/index";
+import { merge } from "../../app/helpers";
+
 
 export const EmptyAccessRequest:IAccessRequest = {
   action: {},
@@ -8,8 +10,9 @@ export const EmptyAccessRequest:IAccessRequest = {
   environment: {}
 };
 
-export const DefaultPolicy:IPolicy = {
+export const DefaultAllowPolicy:IPolicy = {
   version: 1,
+  name: 'Allow Policy',
   effect: POLICY_EFFECT.ALLOW,
   principal: 'test-principal',
   action: 'command:test',
@@ -17,30 +20,27 @@ export const DefaultPolicy:IPolicy = {
   specification: {}
 };
 
-export const CompiledAllowPolicy:ICompiledPolicy = {
+
+export const DefaultDenyPolicy:IPolicy = {
   version: 1,
-  extends: null,
-  id: null,
-  name: 'Allow Policy Test 1',
-  description: null,
-  effect: POLICY_EFFECT.ALLOW,
-  isPrincipalSatisfied: (accessRequest) => ({ result: true }),
-  isActionSatisfied: (accessRequest) => ({ result: true }),
-  isResourceSatisfied: (accessRequest) => ({ result: true }),
-  isSpecificationSatisfied: (accessRequest) => true,
-  obligations: []
+  name: 'Deny Policy',
+  effect: POLICY_EFFECT.DENY,
+  principal: 'test-principal',
+  action: 'command:test',
+  resource: '/path/to/:test',
+  specification: {}
 };
 
-export const CompiledDenyPolicy:ICompiledPolicy = {
-  version: 1,
-  extends: null,
-  id: null,
-  name: 'Deny Policy Test 1',
-  description: null,
-  effect: POLICY_EFFECT.DENY,
+export const CompiledAllowPolicy:ICompiledPolicy = merge({}, DefaultAllowPolicy, {
   isPrincipalSatisfied: (accessRequest) => ({ result: true }),
   isActionSatisfied: (accessRequest) => ({ result: true }),
   isResourceSatisfied: (accessRequest) => ({ result: true }),
-  isSpecificationSatisfied: (accessRequest) => true,
-  obligations: []
-};
+  isSpecificationSatisfied: (accessRequest) => true
+});
+
+export const CompiledDenyPolicy:ICompiledPolicy = merge({}, DefaultDenyPolicy, {
+  isPrincipalSatisfied: (accessRequest) => ({ result: true }),
+  isActionSatisfied: (accessRequest) => ({ result: true }),
+  isResourceSatisfied: (accessRequest) => ({ result: true }),
+  isSpecificationSatisfied: (accessRequest) => true
+});

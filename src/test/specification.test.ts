@@ -141,33 +141,27 @@ describe("Compiling a specification", () => {
       it('returns true if actual is included in an array of expected values', () => {
         assert.isTrue(ASSERTIONS.isIncluded('test', ['this', 'is', 'a', 'test']));
       });
-      it('returns true if actual is included in a comma separated list of expected values', () => {
-        assert.isTrue(ASSERTIONS.isIncluded('test', 'this, is, a, test'));
+      it('returns false if expected is not an array', () => {
+        assert.isFalse(ASSERTIONS.isIncluded('test', 'this, is, a, test'));
       });
       it('returns false if actual is not in an array of expected values', () => {
         assert.isFalse(ASSERTIONS.isIncluded('testing', ['this', 'is', 'a', 'test']));
-      });
-      it('returs false if actual is not in a list of comma separated values', () => {
-        assert.isFalse(ASSERTIONS.isIncluded('testing', 'this, is, a, test'));
       });
     });
     describe('isNotIncluded checks that an actual value is not in an array or comma separated list of expected values', () => {
       it('returns false if actual is included in an array of expected values', () => {
         assert.isFalse(ASSERTIONS.isNotIncluded('test', ['this', 'is', 'a', 'test']));
       });
-      it('returns false if actual is included in a comma separated list of expected values', () => {
-        assert.isFalse(ASSERTIONS.isNotIncluded('test', 'this, is, a, test'));
+      it('returns true if expected is not an array', () => {
+        assert.isTrue(ASSERTIONS.isNotIncluded('test', 'this, is, a, test'));
       });
       it('returns true if actual is not in an array of expected values', () => {
         assert.isTrue(ASSERTIONS.isNotIncluded('testing', ['this', 'is', 'a', 'test']));
       });
-      it('returs true if actual is not in a list of comma separated values', () => {
-        assert.isTrue(ASSERTIONS.isNotIncluded('testing', 'this, is, a, test'));
-      });
     });
     describe('isNull checks if a value is null', () => {
       it('returns true if actual is null', () => {
-        assert.isTrue(ASSERTIONS.isNull(null));
+        assert.isTrue(ASSERTIONS.isNull(null)); // tslint:disable-line
       });
       it('returns false if actual is not null', () => {
         assert.isFalse(ASSERTIONS.isNull('null'));
@@ -175,7 +169,7 @@ describe("Compiling a specification", () => {
     });
     describe('isNotNull checks if a value is not null', () => {
       it('returns false if actual is null', () => {
-        assert.isFalse(ASSERTIONS.isNotNull(null));
+        assert.isFalse(ASSERTIONS.isNotNull(null)); // tslint:disable-line
       });
       it('returns true if actual is not null', () => {
         assert.isTrue(ASSERTIONS.isNotNull('null'));
@@ -253,7 +247,7 @@ describe("Compiling a specification", () => {
           () => true,
           () => true
         ]);
-        const mockAccessRequest = <IAccessRequest><unknown>{};
+        const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isTrue(sut(mockAccessRequest));
       });
       it('anyOf returns true if one assertion returns true', () => {
@@ -261,7 +255,7 @@ describe("Compiling a specification", () => {
           () => true,
           () => false
         ]);
-        const mockAccessRequest = <IAccessRequest><unknown>{};
+        const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isTrue(sut(mockAccessRequest));
       });
       it('anyOf returns false if all assertions return false', () => {
@@ -269,7 +263,7 @@ describe("Compiling a specification", () => {
           () => false,
           () => false
         ]);
-        const mockAccessRequest = <IAccessRequest><unknown>{};
+        const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isFalse(sut(mockAccessRequest));
       });
     });
@@ -279,7 +273,7 @@ describe("Compiling a specification", () => {
           () => true,
           () => true
         ]);
-        const mockAccessRequest = <IAccessRequest><unknown>{};
+        const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isTrue(sut(mockAccessRequest));
       });
       it('allOf returns false if one assertion returns false', () => {
@@ -287,7 +281,7 @@ describe("Compiling a specification", () => {
           () => true,
           () => false
         ]);
-        const mockAccessRequest = <IAccessRequest><unknown>{};
+        const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isFalse(sut(mockAccessRequest));
       });
       it('allOf returns false if all assertions return false', () => {
@@ -295,7 +289,7 @@ describe("Compiling a specification", () => {
           () => false,
           () => false
         ]);
-        const mockAccessRequest = <IAccessRequest><unknown>{};
+        const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isFalse(sut(mockAccessRequest));
       });
     });
@@ -312,12 +306,16 @@ describe("Compiling a specification", () => {
         raining: true
       }
     };
+    it('throws an assertion error if the specification is missing an expected property when the assertion function requires an expected value', () => {
+      const itThrows = () => compileAssertion((actual, expected) => true)('testAssertionFnName')({ attribute: 'test' });
+      assert.throws(itThrows, 'The assertion "testAssertionFnName" requires an expected property');
+    });
     it("compiles a single rule and returns true when assertion returns true", () => {
-      const sut = compileAssertion(() => true)({ attribute: 'test', expected: null });
+      const sut = compileAssertion((actual, expected) => true)('testAssertFnName')({ attribute: 'test', expected: 'expected' });
       assert.isTrue(sut(fixture));
     });
     it("compiles a single rule and returns false when assertion returns false", () => {
-      const sut = compileAssertion(() => false)({ attribute: 'test', expected: null });
+      const sut = compileAssertion((actual, expected) => false)('testAssertFnName')({ attribute: 'test', expected: 'expected' });
       assert.isFalse(sut(fixture));
     });
     it('passes to the assertion the value in a specification for expected using a template literal', () => {
@@ -326,7 +324,7 @@ describe("Compiling a specification", () => {
       const sut = () => {
         const specification = {
           attribute: 'subject.age',
-          expected: '${subject.age}'
+          expected: '${subject.age}' // tslint:disable-line
         };
         const data = {
           action: {},
@@ -337,10 +335,10 @@ describe("Compiling a specification", () => {
           environment: {}
         };
         let expectedSpy;
-        compileAssertion((attribute, expected) => {
+        compileAssertion((actual, expected) => {
           expectedSpy = expected;
-          return (attribute === expected);
-        })(specification)(data);
+          return (actual === expected);
+        })('testFnName')(specification)(data);
         return expectedSpy;
       };
       assert.isTrue(sut() === 20, 'expected that the value provided to the assertion would be 20');
@@ -352,11 +350,11 @@ describe("Compiling a specification", () => {
       assert.isTrue(COMPOSITES.allOf([])(EmptyAccessRequest), "expected true when no rules are provided");
     });
     it("returns true if any rules in composite anyOf rule return true", () => {
-      const ageIsEqualTo25 = compileAssertion((attribute, expected) => (attribute === expected))({
+      const ageIsEqualTo25 = compileAssertion((actual, expected) => (actual === expected))('testAssertionFnName')({
         attribute: 'subject.age',
         expected: 25
       });
-      const tempIsGreaterThanOrEqual18 = compileAssertion(ASSERTIONS.isGreaterThanOrEqual)({
+      const tempIsGreaterThanOrEqual18 = compileAssertion(ASSERTIONS.isGreaterThanOrEqual)('testAssertionFnName')({
         attribute: 'environment.temperature',
         expected: 18
       });
@@ -366,11 +364,11 @@ describe("Compiling a specification", () => {
       assert.isFalse(anyOf(merge({}, fixture, { subject: {age: 30 }, environment: { temperature: 15 }})), "age is not equal and temperature is not greater than or equal so both rules should return false with anyOf return false");
     });
     it("returns true if all rules in composite allOf rule return true", () => {
-      const ageIsEqualTo25 = compileAssertion((attribute, expected) => (attribute === expected))({
+      const ageIsEqualTo25 = compileAssertion((actual, expected) => (actual === expected))('testAssertionFnName')({
         attribute: 'subject.age',
         expected: 25
       });
-      const tempIsGreaterThanOrEqual18 = compileAssertion(ASSERTIONS.isGreaterThanOrEqual)({
+      const tempIsGreaterThanOrEqual18 = compileAssertion(ASSERTIONS.isGreaterThanOrEqual)('testAssertionFnName')({
         attribute: 'environment.temperature',
         expected: 18
       });
@@ -388,7 +386,7 @@ describe("Compiling a specification", () => {
         };
         // a collection of assertions supported by the compiler
         const assertions = {
-          isEqual: (attribute, expected) => true
+          isEqual: (actual, expected) => true
         };
         compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
       };
@@ -399,7 +397,7 @@ describe("Compiling a specification", () => {
         const specification = <ISpecification><unknown>'';
         // a collection of assertions supported by the compiler
         const assertions = {
-          isEqual: (attribute, expected) => true
+          isEqual: (actual, expected) => true
         };
         compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
       };
@@ -417,7 +415,7 @@ describe("Compiling a specification", () => {
         };
         // a collection of assertions supported by the compiler
         const assertions = {
-          isEqual: (attribute, expected) => true
+          isEqual: (actual, expected) => true
         };
         compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
       };
@@ -439,11 +437,11 @@ describe("Compiling a specification", () => {
         const specification = {};
         // a collection of assertions supported by the compiler
         const assertions = {
-          isEqual: (attribute, expected) => true
+          isEqual: (actual, expected) => true
         };
         const sut = compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
         assert.isFunction(sut, 'Expected a function to be returned');
-        const mockAccessRequest = <IAccessRequest><unknown>{};
+        const mockAccessRequest = {} as unknown as IAccessRequest;
       assert.isTrue(sut(mockAccessRequest), 'Expected the function to return true');
     });
     it('compiles a nested specification without errors', () => {

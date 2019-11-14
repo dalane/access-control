@@ -1,20 +1,13 @@
-import { getDeepValue, isEqualObject, assert, assertIsArray } from '../helpers';
+import { getDeepValue, isEqualObject, assert, assertIsArray, assertIsDefined, assertIsObject } from '../helpers';
 import { IAccessRequest } from '../access-request';
 
 export interface ISpecificationProperties {
   attribute:string;
   expected?:any;
-  options?:any;
 }
 
 export interface IAssertionFunction {
   (actual:any, expected?:any):boolean;
-}
-
-export interface IAssertionAttributes {
-  attribute:string;
-  expected:any;
-  options?:any;
 }
 
 export interface ISpecificationMatchFunc {
@@ -22,41 +15,53 @@ export interface ISpecificationMatchFunc {
 }
 
 export interface ICompileAssertion {
-  (assert:IAssertionFunction):ICompileAssertionAttributes;
+  (assertionFn:IAssertionFunction):{
+    (assertionName:string): {
+      (attributes:ISpecificationProperties):ISpecificationMatchFunc;
+    };
+  };
 }
 
-export interface ICompileAssertionAttributes {
-  (attributes:IAssertionAttributes):ISpecificationMatchFunc;
-}
+const countNumberOfFunctionArguments = (fn:Function):number => {
+  const MATCH_PARENTHESIS = /\(([^)]+)\)/;
+  const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+  const fnText = fn.toString().replace(STRIP_COMMENTS, '');
+  let argsString;
+  if (fnText.includes('=>')) {
+    argsString = fnText.split('=>')[0].trim();
+    argsString = (MATCH_PARENTHESIS.test(argsString)) ? MATCH_PARENTHESIS.exec(argsString)[1] : argsString;
+  } else {
+    argsString = (MATCH_PARENTHESIS.test(fnText)) ? MATCH_PARENTHESIS.exec(fnText)[1] : '';
+  }
+  argsString = argsString.trim();
+  if (argsString === '' || argsString === '()') {
+    // return [];
+    return 0;
+  }
+  // return argsString.split(',').map(param => param.trim());
+  return argsString.split(',').length;
+};
 
-export const compileAssertion:ICompileAssertion = (assert:IAssertionFunction) => (specificationProperties:ISpecificationProperties):ISpecificationMatchFunc => {
-  assert(specificationProperties.attribute !== undefined && specificationProperties.attribute !== null, 'The specification is missing an "attribute" property');
+export const compileAssertion:ICompileAssertion = (assertionFn:IAssertionFunction) => (assertionName:string) => (specificationProperties:ISpecificationProperties):ISpecificationMatchFunc => {
+  assertIsDefined(specificationProperties.attribute, 'The specification is missing an "attribute" property');
   const attributeNameParts = specificationProperties.attribute.split('.');
-  let expectedIsAnAttributeOfAccessRequest = false;
-  let expectedAttributeNameParts;
-  let expectedValue;
-  // determine if the expected is a template literal or a value...
-  if (specificationProperties.expected !== null) {
+  const assertionRequiresExpectedValue = countNumberOfFunctionArguments(assertionFn) > 1;
+  if (true === assertionRequiresExpectedValue) {
+    assertIsDefined(specificationProperties.expected, `The assertion "${assertionName}" requires an expected property`);
     // this regular expression will match a template literal string "${...}"
     const templateLiteralRegExp = /\$\{([^}]+)\}/;
-    // if the expected property is a string we will check it to see if it's a
-    // template literal. If the result is null then it's just a string...
-    const result = (typeof specificationProperties.expected === "string") ? templateLiteralRegExp.exec(specificationProperties.expected) : null;
-    if (result !== null) {
-      expectedIsAnAttributeOfAccessRequest = true;
-      expectedAttributeNameParts = result[1].split('.');
-      expectedValue = null;
+    // if the expected property is a string, we will test it to see if it's a
+    // template literal...
+    const expectedIsAVariable = ('string' === typeof specificationProperties.expected && templateLiteralRegExp.test(specificationProperties.expected));
+    if (true === expectedIsAVariable) {
+      const result = templateLiteralRegExp.exec(specificationProperties.expected);
+      const expectedAttributeNameParts = result[1].split('.');
+      return (accessRequest:IAccessRequest):boolean => assertionFn(getDeepValue(accessRequest)(attributeNameParts), getDeepValue(accessRequest)(expectedAttributeNameParts));
     } else {
-      expectedIsAnAttributeOfAccessRequest = false;
-      expectedAttributeNameParts = null;
-      expectedValue = specificationProperties.expected;
+      return (accessRequest:IAccessRequest):boolean => assertionFn(getDeepValue(accessRequest)(attributeNameParts), specificationProperties.expected);
     }
   }
-  return (accessRequest:IAccessRequest):boolean => {
-    const attribute = getDeepValue(accessRequest)(attributeNameParts);
-    const expected = (expectedIsAnAttributeOfAccessRequest) ? getDeepValue(accessRequest)(expectedAttributeNameParts) : expectedValue;
-    return assert(attribute, expected);
-  };
+  return (accessRequest:IAccessRequest):boolean =>  assertionFn(getDeepValue(accessRequest)(attributeNameParts));
 };
 
 /*
@@ -142,8 +147,8 @@ export interface ICompositeAssertions {
 }
 
 export const COMPOSITES:ICompositeAssertions = {
-  anyOf: anyOf,
-  allOf: allOf
+  anyOf,
+  allOf
 };
 
 export const isEqual:IAssertionFunction = (actual:any, expected:any) => {
@@ -167,14 +172,7 @@ export const isGreaterThan:IAssertionFunction = (actual:any, expected:any) => {
 };
 export const isLessThanOrEqual:IAssertionFunction = (actual:any, expected:any) => (actual <= expected);
 export const isLessThan:IAssertionFunction = (actual:any, expected:any) => (actual < expected);
-export const isIncluded:IAssertionFunction = (actual:any, expected:any|any[]) => {
-  if ('string' === typeof expected) {
-    // split into an array on a comma and trim off any whitespace that might
-    // exist on each value...
-    expected = expected.split(',').map(s => s.trim());
-  }
-  return expected.includes(actual);
-};
+export const isIncluded:IAssertionFunction = (actual:any, expected:any|any[]) => (Array.isArray(expected)) ? expected.includes(actual) : false;
 export const isNotIncluded:IAssertionFunction = (actual:any, expected:any[]) => not(isIncluded)(actual, expected);
 export const isNull:IAssertionFunction = (actual:any) => (actual === null);
 export const isNotNull:IAssertionFunction = (actual:any) => not(isNull)(actual);
@@ -182,45 +180,36 @@ export const isTrue:IAssertionFunction = (actual:any) => (actual === true);
 export const isNotTrue:IAssertionFunction = (actual:any) => not(isTrue)(actual);
 export const isPresent:IAssertionFunction = (actual:any) => (actual !== undefined && actual !== null);
 export const isNotPresent:IAssertionFunction = (actual:any) => not(isPresent)(actual);
-export const isMatch:IAssertionFunction = (actual:any, expected:any) => {
-  const regExp = new RegExp(expected);
-  return regExp.test(actual);
-};
+export const isMatch:IAssertionFunction = (actual:any, expected:any) => (new RegExp(expected)).test(actual);
 export const isNotMatch:IAssertionFunction = (actual:any, expected:any) => not(isMatch)(actual, expected);
-export const isEquivalent:IAssertionFunction = (actual:object, expected:object) => {
-  if (typeof actual !== typeof expected && typeof actual !== "object") {
-    return false;
-  }
-  return isEqualObject(actual, expected);
-};
-
+export const isEquivalent:IAssertionFunction = (actual:object, expected:object) => (typeof actual === typeof expected && typeof actual === "object") ? isEqualObject(actual, expected) : false;
 export const isNotEquivalent:IAssertionFunction = (actual:object, expected:object) => not(isEquivalent)(actual, expected);
 
-const not = (func:Function) => (...args:any[]) => !func(...args);
+const not = (func:(...args:any[]) => boolean) => (...args:any[]) => !func(...args);
 
 export interface IAssertions {
   [key:string]:IAssertionFunction;
 }
 
 export const ASSERTIONS:IAssertions = {
-  isEqual: isEqual,
-  isNotEqual: isNotEqual,
-  isGreaterThanOrEqual: isGreaterThanOrEqual,
-  isGreaterThan: isGreaterThan,
-  isLessThanOrEqual: isLessThanOrEqual,
-  isLessThan: isLessThan,
-  isIncluded: isIncluded,
-  isNotIncluded: isNotIncluded,
-  isNull: isNull,
-  isNotNull: isNotNull,
-  isTrue: isTrue,
-  isNotTrue: isNotTrue,
-  isPresent: isPresent,
-  isNotPresent: isNotPresent,
-  isMatch: isMatch,
-  isNotMatch: isNotMatch,
-  isEquivalent: isEquivalent,
-  isNotEquivalent: isNotEquivalent
+  isEqual,
+  isNotEqual,
+  isGreaterThanOrEqual,
+  isGreaterThan,
+  isLessThanOrEqual,
+  isLessThan,
+  isIncluded,
+  isNotIncluded,
+  isNull,
+  isNotNull,
+  isTrue,
+  isNotTrue,
+  isPresent,
+  isNotPresent,
+  isMatch,
+  isNotMatch,
+  isEquivalent,
+  isNotEquivalent
 };
 
 export interface IAssertionProperties {
@@ -256,7 +245,7 @@ export const compileSpecification = (compileCompositeAssertion:ICompileComposite
   if (specification === undefined || specification === null) {
     return defaultCompiledSpecification;
   }
-  assert(typeof specification === 'object', 'Specification must be an object');
+  assertIsObject(specification, 'Specification must be an object');
   const assertionNames:string[] = Object.getOwnPropertyNames(specification);
   if (assertionNames.length === 0) {
     return defaultCompiledSpecification;
@@ -276,5 +265,5 @@ export const compileSpecification = (compileCompositeAssertion:ICompileComposite
   // no composite assertions matched so try matching to assertions
   const foundAssertionFunc = assertions[assertionName];
   assert(foundAssertionFunc !== undefined, 'The assertion function "' + assertionName + '" does not exist');
-  return compileAssertion(foundAssertionFunc)(specification[assertionName]);
+  return compileAssertion(foundAssertionFunc)(assertionName)(specification[assertionName]);
 };

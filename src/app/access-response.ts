@@ -1,4 +1,4 @@
-import { IPolicy } from "./policy/policy";
+import { IPolicy } from "./policy/index";
 
 export enum ACCESS_DECISION {
   ALLOW = 'ALLOW',
@@ -9,6 +9,6 @@ export enum ACCESS_DECISION {
 export interface IAccessResponse {
   decision:ACCESS_DECISION;
   messages:string[];
-  obligations:any[];
+  // obligations:any[]; TODO: version 2 policies...
   failedPolicies?:IPolicy[];
 }

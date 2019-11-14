@@ -1,14 +1,18 @@
 {
   "name": "@dalane/barbican",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/app/index.js",
   "types": "build/app/index.d.ts",
+  "files": [
+    "build/app/**/*"
+  ],
   "scripts": {
     "compile": "rm -rf ./build && tsc",
-    "prepack": "yarn run compile",
+    "prepare": "yarn run compile",
     "pretest": "yarn run compile",
-    "lint": "tslint -c tslint.json 'src/**/*.ts'",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -c tslint.json -p tsconfig.json",
     "example": "node ./examples/web/index.js",
     "test": "nyc mocha"
   },
@@ -23,7 +27,6 @@
   },
   "homepage": "https://github.com/dalane/access-control#readme",
   "dependencies": {
-    "immutable": "3.8.2",
     "lodash": "4.17.15",
     "url-pattern": "1.0.3"
   },
@@ -34,8 +37,10 @@
     "chai": "4.2.0",
     "mocha": "6.2.2",
     "nyc": "14.1.1",
+    "prettier": "^1.19.1",
     "source-map-support": "0.5.13",
     "tslint": "5.20.1",
+    "tslint-config-prettier": "^1.18.0",
     "typescript": "3.7.2"
   }
 }

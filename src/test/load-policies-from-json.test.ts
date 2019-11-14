@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { mergeExtendedPolicies, findPolicyFiles, loadFilesFromPaths } from '../app/load-policies-from-json';
-import { IPolicy, POLICY_EFFECT } from '../app/policy/policy';
+import { IPolicy, POLICY_EFFECT } from '../app/policy/index';
 import { join } from 'path';
 
 describe('Loading policies from JSON files', () => {
