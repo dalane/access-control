@@ -1,6 +1,6 @@
 {
-  "name": "@dalane/barbican",
-  "version": "0.3.5",
+  "name": "@dalane/access-control",
+  "version": "0.3.6",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/app/index.js",
   "types": "build/app/index.d.ts",

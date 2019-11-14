@@ -1,16 +1,20 @@
-# "Barbican", an Attribuate Based Access Control libary for your Node.js apps
+# Attribute Based Access Control libary for your Node.js apps
 
-Barbican is an attribute based access control (ABAC) system for node applications.
-
-It takes an Access Request and makes a decision by validating it against
-applicable policies.
+The node package ```@dalane/access-control``` is an attribute based access
+control (ABAC) system for node applications.
 
 For more information on ABAC see the ["Guide to Attribute Based Access Control (ABAC) Definition and Considerations"](https://nvlpubs.nist.gov/nistpubs/specialpublications/NIST.SP.800-162.pdf)
 
 ## Installation
 
 ```
-npm install --save @dalane\barbican
+yarn add @dalane/access-control
+```
+
+or
+
+```
+npm install --save @dalane/access-control
 ```
 
 ## Attribute Based Access Control
@@ -92,18 +96,6 @@ Policies can be created using JSON files.
 ```
 
 Or they can be created using Plain Javascript Objects using the same structure.
-
-### Minimum requirements in a policy
-
-A policy must contain the following minimum properties in order to work.
-
-- version
-- id
-- effect
-- action
-- resource
-- principal
-- specification
 
 #### Version
 
@@ -285,7 +277,7 @@ policy to a URL pattern. This is specified in the property ```path``` of the
 ```resource``` property of the access request.
 
 ```typescript
-import { compileUrlPatternResource } from '@dalane/barbican'
+import { compileUrlPatternResource } from '@dalane/access-control'
 
 const accessRequest:IAccessRequest = {
   action: ...,
@@ -435,7 +427,7 @@ interface IAssertion {
   (attribute:any, expected?:any, options?:any):boolean
 }
 
-import { ASSERTIONS, COMPOSITES,  compileAssertions, compileSpecification } from '@dalane/barbican';
+import { ASSERTIONS, COMPOSITES,  compileAssertions, compileSpecification } from '@dalane/access-control';
 import * as _ from 'lodash'
 
 const assertions = _.merge({}, ASSERTIONS, myAssertions);
@@ -629,7 +621,7 @@ For you convenience, we've provided a function ```findPolicySet``` that iterates
 through the compiled policies and validates them to the access request.
 
 ```typescript
-import { findPolicySet } from "@dalane/barbican";
+import { findPolicySet } from "@dalane/access-control";
 
 const policies = [...]; // an array containing the compiled policies...
 const pdp = policyDecisionPoint();
