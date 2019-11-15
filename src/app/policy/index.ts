@@ -4,7 +4,7 @@ import { assert, assertIsDefined, assertIsObject, merge } from '../helpers';
 import { loadJsonPolicyFiles } from '../load-policies-from-json';
 import { CompilePrincipalFunc, compileUserIdPrincipal } from './principal';
 import { compileUrlPatternResource, ICompileResource } from "./resource";
-import { compileSpecification, compileCompositeAssertion, compileAssertion, COMPOSITES, ASSERTIONS, ICompileSpecification, ISpecificationMatchFunc, ISpecification } from "./specification";
+import { COMPOSITES, ASSERTIONS, ICompileSpecificationFunc, ISpecificationMatchFunc, ISpecification, makeCompileCompositeAssertions, makeCompileAssertions, makeCompileSpecification } from "./specification";
 
 
 export interface IIsSatisfiedByResult {
@@ -35,10 +35,13 @@ export const makeIsSatisfiedByResult = (result:boolean, params?:object, message?
 export const createDefaultCompiledPolicies = async (basePath:string):Promise<ICompiledPolicy[]> => {
   // load policies from JSON policy files located in the base path folder...
   const loadedFilePolicies = await loadJsonPolicyFiles(basePath);
+  const compileComposites = makeCompileCompositeAssertions(COMPOSITES);
+  const compileAssertions = makeCompileAssertions(ASSERTIONS);
+  const compileSpecification = makeCompileSpecification(compileComposites)(compileAssertions);
   // compile specications function passed to the policy compilation function using built-in composite assertions and assertions...
-  const compileSpecFunc = compileSpecification(compileCompositeAssertion)(compileAssertion)(COMPOSITES)(ASSERTIONS);
+  // const compileSpecFunc = compileSpecification(compileCompositeAssertion)(compileAssertion)(COMPOSITES)(ASSERTIONS);
   // policies will be matched based on command-query action name, url pattern resource path  and a user-id property in subject...
-  const compilePolicyFunc = compilePolicy(compileHttpAction)(compileUrlPatternResource)(compileUserIdPrincipal)(compileSpecFunc);
+  const compilePolicyFunc = makeCompilePolicy(compileHttpAction)(compileUrlPatternResource)(compileUserIdPrincipal)(compileSpecification);
   return loadedFilePolicies.map(compilePolicyFunc);
  };
 
@@ -89,7 +92,7 @@ export interface ICompilePolicy {
   (compileAction:ICompileAction):{
     (compileResource:ICompileResource):{
       (compilePrincipal:CompilePrincipalFunc):{
-        (compileSpecification:ICompileSpecification):{
+        (compileSpecification:ICompileSpecificationFunc):{
           (policy:IPolicy):ICompiledPolicy;
         };
       };
@@ -104,10 +107,10 @@ const getPolicyEffect = (policy:IPolicy) => {
   return policy.effect;
 };
 
-export const compilePolicy:ICompilePolicy = (compileActionFn:ICompileAction) =>
+export const makeCompilePolicy:ICompilePolicy = (compileActionFn:ICompileAction) =>
   (compileResourceFn:ICompileResource) =>
     (compilePrincipalFn:CompilePrincipalFunc) =>
-      (compileSpecificationFn:ICompileSpecification) =>
+      (compileSpecificationFn:ICompileSpecificationFunc) =>
         (policy:IPolicy):ICompiledPolicy => {assertIsDefined(policy, 'The policy is undefined');
           assertIsObject(policy, 'The policy is not an object');
           assertIsDefined(policy.version, 'You must specify a policy version');

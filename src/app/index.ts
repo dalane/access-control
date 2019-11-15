@@ -9,20 +9,14 @@ import * as principal from './policy/principal';
 import * as resource from './policy/resource';
 import * as specification from './policy/specification';
 
-const policies = {
-  action,
-  obligations: {},
-  policy,
-  principal,
-  resource,
-  specification
-};
-
 export {
+  action,
   accessRequest,
   accessResponse,
   files,
-  policies,
+  policy,
   policyDecisionPoint,
+  principal,
+  resource,
   specification
 };

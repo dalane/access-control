@@ -1,6 +1,6 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/app/index.js",
   "types": "build/app/index.d.ts",
@@ -37,10 +37,10 @@
     "chai": "4.2.0",
     "mocha": "6.2.2",
     "nyc": "14.1.1",
-    "prettier": "^1.19.1",
+    "prettier": "1.19.1",
     "source-map-support": "0.5.13",
     "tslint": "5.20.1",
-    "tslint-config-prettier": "^1.18.0",
+    "tslint-config-prettier": "1.18.0",
     "typescript": "3.7.2"
   }
 }

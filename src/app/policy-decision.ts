@@ -101,6 +101,10 @@ export interface IMatchAccessRequestToPolicy {
   (accessRequest:IAccessRequest):IMatchedPolicyResult[];
 }
 
+export interface IPolicySetReducer {
+  (policySet:IMatchedPolicyResult[], compiledPolicy:ICompiledPolicy):IMatchedPolicyResult[];
+}
+
 export const makeFindPolicySet:IMatchCompiledPolicies = (compiledPolicies:ICompiledPolicy[]):IMatchAccessRequestToPolicy => (accessRequest:IAccessRequest):IMatchedPolicyResult[] => {
   return compiledPolicies.reduce((policySet:IMatchedPolicyResult[], compiledPolicy:ICompiledPolicy) => {
     // console.log(accessRequest, compiledPolicy, compiledPolicy.isPrincipalSatisfied(accessRequest), compiledPolicy.isActionSatisfied(accessRequest), compiledPolicy.isResourceSatisfied(accessRequest));

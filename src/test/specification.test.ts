@@ -1,4 +1,4 @@
-import { ASSERTIONS, compileAssertion, COMPOSITES, compileSpecification, compileCompositeAssertion, ISpecification, anyOf, allOf, isIncluded } from "../app/policy/specification";
+import { ASSERTIONS, COMPOSITES, ISpecification, anyOf, allOf, makeCompileAssertions, makeCompileCompositeAssertions, makeCompileSpecification, ICompileSpecificationFunc, ICompileCompositeSpecifications } from "../app/policy/specification";
 import { assert } from 'chai';
 import { EmptyAccessRequest } from "./fixtures/test-data";
 import { merge } from "../app/helpers";
@@ -241,6 +241,20 @@ describe("Compiling a specification", () => {
         assert.isTrue(ASSERTIONS.isNotEquivalent({ test: 'world', hello: '!'}, { test: 'hello', world: '!'}));
       });
     });
+  });
+
+  describe('composite assertions', () => {
+    const fixture = {
+      action: {},
+      subject: {
+        age: 25
+      },
+      resource: {},
+      environment: {
+        temperature: 20,
+        raining: true
+      }
+    };
     describe('anyOf returns true if more or more assertions in the array return true', () => {
       it('anyOf returns true if all assertions return true', () => {
         const sut = anyOf([
@@ -265,6 +279,27 @@ describe("Compiling a specification", () => {
         ]);
         const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isFalse(sut(mockAccessRequest));
+      });
+      it("returns true if there are no rules in anyOf composite rule", () => {
+        assert.isTrue(COMPOSITES.anyOf([])(EmptyAccessRequest), "expected true when no rules are provided");
+      });
+      it("returns true if any rules in composite anyOf rule return true", () => {
+        const ageIsEqualTo25 = () => true;
+        const tempIsGreaterThanOrEqual18 = () => false;
+        const anyOf = COMPOSITES.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        assert.isTrue(anyOf(fixture), "both rules return true results in true");
+      });
+      it("returns true if both rules in composite anyOf rule return true", () => {
+        const ageIsEqualTo25 = () => true;
+        const tempIsGreaterThanOrEqual18 = () => true;
+        const anyOf = COMPOSITES.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        assert.isTrue(anyOf(fixture), "both rules return true results in true");
+      });
+      it("returns false if all rules in composite anyOf rule return false", () => {
+        const ageIsEqualTo25 = () => false;
+        const tempIsGreaterThanOrEqual18 = () => false;
+        const anyOf = COMPOSITES.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        assert.isFalse(anyOf(fixture), "both rules return true results in true");
       });
     });
     describe('allOf returns true if all assertions in the array return true', () => {
@@ -292,6 +327,27 @@ describe("Compiling a specification", () => {
         const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isFalse(sut(mockAccessRequest));
       });
+      it("returns true if there are no rules in allOf composite rule", () => {
+        assert.isTrue(COMPOSITES.allOf([])(EmptyAccessRequest), "expected true when no rules are provided");
+      });
+      it("returns true if all rules in composite allOf rule return true", () => {
+        const ageIsEqualTo25 = () => true;
+        const tempIsGreaterThanOrEqual18 = () => true;
+        const allOf = COMPOSITES.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        assert.isTrue(allOf(fixture), "both rules return true results in true");
+      });
+      it("returns false if any one rule in composite allOf rule returns false", () => {
+        const ageIsEqualTo25 = () => true;
+        const tempIsGreaterThanOrEqual18 = () => false;
+        const allOf = COMPOSITES.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        assert.isFalse(allOf(fixture), "both rules return true results in true");
+      });
+      it("returns false if all rules in composite allOf rule returns false", () => {
+        const ageIsEqualTo25 = () => false;
+        const tempIsGreaterThanOrEqual18 = () => false;
+        const allOf = COMPOSITES.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        assert.isFalse(allOf(fixture), "both rules return true results in true");
+      });
     });
   });
   describe("Compiling assertions", () => {
@@ -306,25 +362,93 @@ describe("Compiling a specification", () => {
         raining: true
       }
     };
+    it('throws an assertion error if the specification is empty', () => {
+      const assertions = {
+        testAssertionFnName: (actual, expected) => true
+      };
+      const specification = {} as unknown as ISpecification;
+      const itThrows = () => makeCompileAssertions(assertions)(specification);
+      assert.throws(itThrows, 'An assertion name is required in a specification');
+    });
+    it('throws an assertion error if the specification is missing the property "attribute"', () => {
+      const assertions = {
+        testAssertionFnName: (actual, expected) => true
+      };
+      const specification = {
+        testAssertionFnName: {
+          expected: 'test'
+        }
+      } as unknown as ISpecification;
+      const itThrows = () => makeCompileAssertions(assertions)(specification);
+      assert.throws(itThrows, 'The specification is missing an "attribute" property');
+    });
     it('throws an assertion error if the specification is missing an expected property when the assertion function requires an expected value', () => {
-      const itThrows = () => compileAssertion((actual, expected) => true)('testAssertionFnName')({ attribute: 'test' });
+      const assertions = {
+        testAssertionFnName: (actual, expected) => true
+      };
+      const specification = {
+        testAssertionFnName: {
+          attribute: 'test'
+        }
+      };
+      const itThrows = () => makeCompileAssertions(assertions)(specification);
       assert.throws(itThrows, 'The assertion "testAssertionFnName" requires an expected property');
     });
+    it('returns undefined if an assertion function is not found', () => {
+      const assertions = {
+        testAssertionFnName: (actual, expected) => true
+      };
+      const specification = {
+        anotherTestAssertionFnName: {
+          attribute: 'attribute',
+          expected: 'expected'
+        }
+      };
+      const sut = makeCompileAssertions(assertions)(specification);
+      assert.isUndefined(sut);
+    });
     it("compiles a single rule and returns true when assertion returns true", () => {
-      const sut = compileAssertion((actual, expected) => true)('testAssertFnName')({ attribute: 'test', expected: 'expected' });
+      const assertions = {
+        testAssertionFnName: (actual, expected) => true
+      };
+      const specification = {
+        testAssertionFnName: {
+          attribute: 'attribute',
+          expected: 'expected'
+        }
+      };
+      const sut = makeCompileAssertions(assertions)(specification);
       assert.isTrue(sut(fixture));
     });
     it("compiles a single rule and returns false when assertion returns false", () => {
-      const sut = compileAssertion((actual, expected) => false)('testAssertFnName')({ attribute: 'test', expected: 'expected' });
+      const assertions = {
+        testAssertionFnName: (actual, expected) => false
+      };
+      const specification = {
+        testAssertionFnName: {
+          attribute: 'attribute',
+          expected: 'expected'
+        }
+      };
+      const sut = makeCompileAssertions(assertions)(specification);
       assert.isFalse(sut(fixture));
     });
     it('passes to the assertion the value in a specification for expected using a template literal', () => {
       // spy on the expected variable to make sure it equals the value obtained from
       // the data
       const sut = () => {
+        let spy;
+        const assertions = {
+          testAssertionFnName: (actual, expected) => {
+            spy = expected;
+            return true;
+          }
+        };
         const specification = {
-          attribute: 'subject.age',
-          expected: '${subject.age}' // tslint:disable-line
+          testAssertionFnName: {
+            attribute: 'subject.age',
+            expected: '${subject.age}' // tslint:disable-line
+          }
         };
         const data = {
           action: {},
@@ -334,146 +458,112 @@ describe("Compiling a specification", () => {
           resource: {},
           environment: {}
         };
-        let expectedSpy;
-        compileAssertion((actual, expected) => {
-          expectedSpy = expected;
-          return (actual === expected);
-        })('testFnName')(specification)(data);
-        return expectedSpy;
+        makeCompileAssertions(assertions)(specification)(data);
+        return spy;
       };
       assert.isTrue(sut() === 20, 'expected that the value provided to the assertion would be 20');
     });
-    it("returns true if there are no rules in anyOf composite rule", () => {
-      assert.isTrue(COMPOSITES.anyOf([])(EmptyAccessRequest), "expected true when no rules are provided");
+  });
+  describe('Compiling composite assertions', () => {
+    it('throws an assertion error if there is no assertion in the specification', () => {
+      const composites = {};
+      const mockCompileSpecification = () => {};
+      const specification = {};
+      const itThrows = () => makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
+      assert.throws(itThrows, 'An assertion name is required for a composite assertion');
     });
-    it("returns true if there are no rules in allOf composite rule", () => {
-      assert.isTrue(COMPOSITES.allOf([])(EmptyAccessRequest), "expected true when no rules are provided");
+    it('throws an assertion error if the composite assertion value is not an array', () => {
+      const composites = {
+        testCompositeFn: (compiledssertions) => (accessRequest:IAccessRequest) => true
+      };
+      const mockCompileSpecification = () => {};
+      const specification = {
+        testCompositeFn: {}
+      } as unknown as ISpecification;
+      const itThrows = () => makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
+      assert.throws(itThrows, 'Composite assertions must be an array');
     });
-    it("returns true if any rules in composite anyOf rule return true", () => {
-      const ageIsEqualTo25 = compileAssertion((actual, expected) => (actual === expected))('testAssertionFnName')({
-        attribute: 'subject.age',
-        expected: 25
-      });
-      const tempIsGreaterThanOrEqual18 = compileAssertion(ASSERTIONS.isGreaterThanOrEqual)('testAssertionFnName')({
-        attribute: 'environment.temperature',
-        expected: 18
-      });
-      const anyOf = COMPOSITES.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
-      assert.isTrue(anyOf(fixture), "both rules return true results in true");
-      assert.isTrue(anyOf(merge({}, fixture, { subject: {age: 30 }})), "age is not equal to 25 so rule should returns false but overall result is true");
-      assert.isFalse(anyOf(merge({}, fixture, { subject: {age: 30 }, environment: { temperature: 15 }})), "age is not equal and temperature is not greater than or equal so both rules should return false with anyOf return false");
+    it('returns undefined if a composite assertion function was not found', () => {
+      const composites = {
+        testCompositeFn: (compiledssertions) => (accessRequest:IAccessRequest) => true
+      };
+      const mockCompileSpecification = () => {};
+      const specification = {
+        anotherTestFn: [] // this proprty "anotherTestFn" doesn't exist in the composites functions above...
+      };
+      const sut = makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
+      assert.isUndefined(sut, 'Expected the compiler to return undefined');
     });
-    it("returns true if all rules in composite allOf rule return true", () => {
-      const ageIsEqualTo25 = compileAssertion((actual, expected) => (actual === expected))('testAssertionFnName')({
-        attribute: 'subject.age',
-        expected: 25
-      });
-      const tempIsGreaterThanOrEqual18 = compileAssertion(ASSERTIONS.isGreaterThanOrEqual)('testAssertionFnName')({
-        attribute: 'environment.temperature',
-        expected: 18
-      });
-      const allOf = COMPOSITES.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
-      assert.isTrue(allOf(fixture), "both rules return true results in true");
-      assert.isFalse(allOf(merge({}, fixture, { subject: {age: 30 }})), "age is not equal to 25 so rule should returns false but expected allOf to return false");
-      assert.isFalse(allOf(merge({}, fixture, { subject: {age: 30 }, environment: { temperature: 15 }})), "age is not equal and temperature is not greater than or equal so both rules should return false with anyOf return false");
+    it('returns a compiled composite assertion', () => {
+      const composites = {
+        testCompositeFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
+      };
+      const mockCompileSpecification = (specification) => {
+        return (accessRequest:IAccessRequest) => true;
+      };
+      const specification = {
+        testCompositeFn: [] // this proprty "anotherTestFn" doesn't exist in the composites functions above...
+      };
+      const mockAccessRequest = {} as unknown as IAccessRequest;
+      const sut = makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
+      assert.isTrue(sut(mockAccessRequest), 'Expected the compiled composite function to return true');
     });
   });
-  describe("Compiling a specification", () => {
-    it('throws an error if an assertion name is not recognised', () => {
-      const itThrowsATypeError = () => {
-        const specification = <ISpecification><unknown>{
-          test: {}
-        };
-        // a collection of assertions supported by the compiler
-        const assertions = {
-          isEqual: (actual, expected) => true
-        };
-        compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
-      };
-      assert.throws(itThrowsATypeError, 'The assertion function "test" does not exist');
+  describe("Compiling a specification combining compiling assertions and composites", () => {
+    it('returns a compiled specification that always returns true if the specification in a policy is not defined', () => {
+      const mockCompileComposite = () => {};
+      const mockCompileAssertion = () => {};
+      const specification = undefined as unknown as ISpecification;
+      const mockAccessRequest = {} as unknown as IAccessRequest;
+      const sut = makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      assert.isFunction(sut, 'expected a function to be returned');
+      assert.isTrue(sut(mockAccessRequest), 'expected an undefined specification to return true');
     });
-    it('throws an error if a specification is not an object', () => {
-      const itThrowsATypeError = () => {
-        const specification = <ISpecification><unknown>'';
-        // a collection of assertions supported by the compiler
-        const assertions = {
-          isEqual: (actual, expected) => true
-        };
-        compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
-      };
-      assert.throws(itThrowsATypeError, 'Specification must be an object');
+    it('returns a compiled specification that always returns true if the specification in a policy is an empty object', () => {
+      const mockCompileComposite = () => {};
+      const mockCompileAssertion = () => {};
+      const specification = {} as unknown as ISpecification;
+      const mockAccessRequest = {} as unknown as IAccessRequest;
+      const sut = makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      assert.isFunction(sut, 'expected a function to be returned');
+      assert.isTrue(sut(mockAccessRequest), 'expected an empty specification to return true');
+    });
+    it('throws an error if a specification is provided but is not an object', () => {
+      const mockCompileComposite = (compileSpecification:ICompileSpecificationFunc) => () => {};
+      const mockCompileAssertion = () => {};
+      const specification = [] as unknown as ISpecification;
+      const mockAccessRequest = {} as unknown as IAccessRequest;
+      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      assert.throws(itThrows, 'Specification must be an object');
+    });
+    it('throws an error if an assertion name is not recognised', () => {
+      // if both teh compile composite and compile assertion functions return
+      // undefined then compile specificaiton will throw an assertion error...
+      const mockCompileComposite = (compileSpecification:ICompileSpecificationFunc) => (specification:ISpecification) => undefined;
+      const mockCompileAssertion = (specification:ISpecification) => undefined;
+      const specification = {
+        test: {} // specify an assertion name to avoid triggering an empty spec error
+      } as unknown as ISpecification;
+      const mockAccessRequest = {} as unknown as IAccessRequest;
+      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      assert.throws(itThrows, 'The assertion "test" does not exist');
     });
     it('throws an error if more than one assertion in a specification object', () => {
-      const itThrowsATypeError = () => {
-        const specification = <ISpecification> {
-          isEqual: {
-            attribute: 'test'
-          },
-          isNotEqual: {
-            attribute: 'test'
-          }
-        };
-        // a collection of assertions supported by the compiler
-        const assertions = {
-          isEqual: (actual, expected) => true
-        };
-        compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
-      };
-      assert.throws(itThrowsATypeError, 'Only one assertion per assertion object');
-    });
-    it("returns a function that always returns true if the specification is undefined", () => {
-      const specification = undefined;
-      const sut = compileSpecification(compileCompositeAssertion)(compileAssertion)(COMPOSITES)(ASSERTIONS)(specification);
-      assert.isTrue(sut({
-        action: {},
-        subject: {
-          name: "John Smith"
-        },
-        resource: {},
-        environment: {}
-      }));
-    });
-    it('returns a function that always returns true if the specification is an empty object', () => {
-        const specification = {};
-        // a collection of assertions supported by the compiler
-        const assertions = {
-          isEqual: (actual, expected) => true
-        };
-        const sut = compileSpecification(compileCompositeAssertion)(compileAssertion)({})(assertions)(specification);
-        assert.isFunction(sut, 'Expected a function to be returned');
-        const mockAccessRequest = {} as unknown as IAccessRequest;
-      assert.isTrue(sut(mockAccessRequest), 'Expected the function to return true');
-    });
-    it('compiles a nested specification without errors', () => {
+            // if both teh compile composite and compile assertion functions return
+      // undefined then compile specificaiton will throw an assertion error...
+      const mockCompileComposite = (compileSpecification:ICompileSpecificationFunc) => (specification:ISpecification) => undefined;
+      const mockCompileAssertion = (specification:ISpecification) => undefined;
       const specification = {
-        allOf: [
-          {
-            isEqual: {
-              attribute: 'subject.name',
-              expected: 'John'
-            }
-          },
-          {
-            anyOf: [
-              {
-                isGreaterThan: {
-                  attribute: "environment.temperature",
-                  expected: 22
-                }
-              },
-              {
-                isTrue: {
-                  attribute: "environment.isRaining"
-                }
-              }
-            ]
-          }
-        ]
-      };
-      const doesNotThrow = () => {
-        const sut = compileSpecification(compileCompositeAssertion)(compileAssertion)(COMPOSITES)(ASSERTIONS)(specification);
-      };
-      assert.doesNotThrow(doesNotThrow, 'expected no errors to be thrown');
+        isEqual: {
+          attribute: 'test'
+        },
+        isNotEqual: {
+          attribute: 'test'
+        }
+      } as unknown as ISpecification;
+      const mockAccessRequest = {} as unknown as IAccessRequest;
+      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      assert.throws(itThrows, 'Only one assertion per specification is allowed');
     });
     it('a complex compiled specification returns true as expected', () => {
       const specification = {
@@ -501,7 +591,7 @@ describe("Compiling a specification", () => {
           }
         ]
       };
-      const sut = compileSpecification(compileCompositeAssertion)(compileAssertion)(COMPOSITES)(ASSERTIONS)(specification);
+      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES))(makeCompileAssertions(ASSERTIONS))(specification);
       assert.isTrue(sut({
         action: {},
         subject: {
@@ -540,7 +630,7 @@ describe("Compiling a specification", () => {
           }
         ]
       };
-      const sut = compileSpecification(compileCompositeAssertion)(compileAssertion)(COMPOSITES)(ASSERTIONS)(specification);
+      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES))(makeCompileAssertions(ASSERTIONS))(specification);
       assert.isFalse(sut({
         action: {},
         subject: {

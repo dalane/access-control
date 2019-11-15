@@ -42,8 +42,9 @@ export const isFile = async (path:string):Promise<boolean> => {
 };
 
 export const isEqualObject = (a:object, b:object) => _isEqual(a, b);
+export const isUndefined = (value:any) => (value === undefined || value === null);
 
-const throwAssertionError = (message:string = 'AssertionError', actual?:any, expected?:any) => {
+export const throwAssertionError = (message:string = 'AssertionError', actual?:any, expected?:any) => {
   throw new AssertionError({
     actual,
     expected,
@@ -67,7 +68,8 @@ export function assertIsDefined<T>(val:T, message?:string):asserts val is NonNul
 }
 
 export function assertIsObject(value:any, message?:string):asserts value is object {
-  assert('object' === typeof(value), message);
+  // typeof on an array will also return object...
+  assert('object' === typeof(value) && !Array.isArray(value), message);
 }
 
 export function assertIsBoolean(value:any, message?:string):asserts value is boolean {

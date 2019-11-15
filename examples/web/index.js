@@ -1,6 +1,6 @@
-const { policyDecisionPoint, policies, accessResponse } = require('../../build/app');
+const { policyDecisionPoint, policy, accessResponse } = require('../../build/app');
 const { makePolicyDecisionPoint, makeFindPolicySet } = policyDecisionPoint;
-const { createDefaultCompiledPolicies } = policies.policy;
+const { createDefaultCompiledPolicies } = policy;
 const { ACCESS_DECISION } = accessResponse;
 const { createServer } = require('http');
 const { join } = require('path');
@@ -107,28 +107,24 @@ const policyExecutionPoint = pdp => (request, response) => {
   let [path, query] = request.url.split('?');
   const accessRequest = makeAccessRequest(request.method, path, request.authenticatedUser, request);
   const accessResponse = pdp(accessRequest);
-  if (accessResponse.decision === ACCESS_DECISION.NOT_APPLICABLE) {
+  const send403Response = (response, accessResponse, message) => {
     response.statusCode = 403; // 403 Forbidden
     response.setHeader('Content-Type', 'text/html');
     response.write('<html>')
     response.write('<head><title>Forbidden Error</title></head>');
     response.write('<body><h1>Forbidden Error</h1>');
-    response.write('<p>We received a not-applicable access response indicating that no policies were found to match the resource. We decided that the policy execution point would forbid these requests.</p>');
+    response.write('<p>' + message + '</p>');
+    response.write('<p>Below is the response we received from the policy decision point.</p>');
     response.write('<pre>' + JSON.stringify(accessResponse, null, 2) + '</pre>');
     response.write('</body><html>');
     response.end();
+  }
+  if (accessResponse.decision === ACCESS_DECISION.NOT_APPLICABLE) {
+    send403Response(response, accessResponse, 'You have not been granted access as your request did not match any of our policies.');
     return false;
   }
-  if (accessResponse.decision === ACCESS_DECISION.NOT_APPLICABLE || accessResponse.decision === ACCESS_DECISION.DENY) {
-    response.statusCode = 403; // 403 Forbidden
-    response.setHeader('Content-Type', 'text/html');
-    response.write('<html>')
-    response.write('<head><title>Forbidden Error</title></head>');
-    response.write('<body><h1>Forbidden Error</h1>');
-    response.write('<p>The authorization service responded with the following access response...</p>');
-    response.write('<pre>' + JSON.stringify(accessResponse, null, 2) + '</pre>');
-    response.write('</body><html>');
-    response.end();
+  if (accessResponse.decision === ACCESS_DECISION.DENY) {
+    send403Response(response, accessResponse, 'You have not been granted access as your request did not satisfy our policies.');
     return false;
   }
   request.accessResponse = accessResponse;
@@ -167,10 +163,7 @@ const main = async (paths, port) => {
     httpServer.on('listening', () => logOnListening(port));
     httpServer.on('close', () => logOnClose(port));
     httpServer.listen(port);
-    process.on('SIGINT', async () => {
-      await clearLine();
-      await resetCursor();
-      console.info('Interrupt signal received, shutting down example web server...');
+    process.on('SIGINT', () => {
       httpServer.close(() => process.exit(0));
     });
   } catch (error) {
@@ -178,18 +171,6 @@ const main = async (paths, port) => {
     process.exit(0);
   }
 };
-
-const clearLine = () => {
-  return new Promise((resolve) => {
-    process.stdout.clearLine(0, () => resolve());
-  })
-}
-
-const resetCursor = () => {
-  return new Promise((resolve) => {
-    process.stdout.cursorTo(0, null, () => resolve());
-  });
-}
 
 // run the app
 main(PATH_HANDLERS, PORT);
