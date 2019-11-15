@@ -71,7 +71,7 @@ const COMPOSITE_ASSERTIONS = {
 };
 
 export interface ICompileCompositeSpecifications {
-  (compileSpecification):ICompileSpecificationFunc
+  (compileSpecification):ICompileSpecificationFunc;
 }
 
 export const makeCompileCompositeAssertions = (compositeFunctions:ICompositeAssertions):ICompileCompositeSpecifications => (compileSpecification:ICompileSpecificationFunc):ICompileSpecificationFunc => (specification:ISpecification) => {
