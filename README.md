@@ -846,9 +846,8 @@ the variable "resource.params.id".
 }
 ```
 
-Where a property contains an array (such as ```resource.params```), it can only
-be utilised with the ```"isIncluded"``` and ```"isNotIncluded"``` rule
-specifications. We don't support accessing array attributes by index.
+Where an attribute on the access request is an array, it can only be utilised
+with the ```"isIncluded"``` and ```"isNotIncluded"``` assertions.
 
 ## Access Requests
 
