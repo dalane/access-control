@@ -611,9 +611,8 @@ They are used in the ```specification``` section of policy as follows:
 ```json
 {
   "<assertion-name>": {
-    "attribute": "<attribute-path>", // required
-    "expected": "<expected-value>", // is not required for all assertions
-    "options": {} // optional
+    "attribute": "<attribute-path>",
+    "expected": "<expected-value>"
   }
 }
 ```
