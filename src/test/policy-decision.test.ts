@@ -1,8 +1,8 @@
 import { assert } from 'chai';
 import { CompiledAllowPolicy, CompiledDenyPolicy } from './fixtures/test-data';
-import { makePolicyDecisionPoint, IMatchedPolicyResult, makeFindPolicySet } from '../app/policy-decision';
+import { makePolicyDecisionPoint, IMatchedPolicyResult, makeFindPolicySet, IMatchCompiledPolicies, IMatchAccessRequestToPolicy } from '../app/policy-decision';
 import { ICompiledPolicy, POLICY_EFFECT } from '../app/policy/index';
-import { merge } from '../app/helpers';
+import { merge, isEqualObject } from '../app/helpers';
 import { IAccessRequest } from '../app/access-request';
 import { ACCESS_DECISION } from '../app/access-response';
 
@@ -155,6 +155,109 @@ describe('Policy Decision Point', () => {
       const sut = makePolicyDecisionPoint(mockFindPoliciesMatchingAccessRequest)(mockAccessRequest);
       assert.equal(sut.decision, ACCESS_DECISION.ALLOW, 'expected an allow decision');
       assert.equal(sut.messages.length, 0, 'Expected no messages to be returned');
+    });
+    it('merges params provided in the policy set into the access request for the matched policy', () => {
+       // result of an object comparison of the access request from the PDP versus the expected access request
+      let isExpectedPolicy1AccessRequest:boolean;
+       // result of an object comparison of the access request from the PDP versus the expected access request
+      let isExpectedPolicy2AccessRequest:boolean;
+      const mockFindPolicySet = (accessRequest:IAccessRequest) => [
+        {
+          // policy 1 access request should have params from the matched policy params only
+          policy: {
+            // mock the isSpecificationSatisfied method to populate our spy...
+            isSpecificationSatisfied: (accessRequest) => {
+              isExpectedPolicy1AccessRequest = isEqualObject(accessRequest, {
+                resource: {
+                  params: {
+                    resourceTest1: 'test-resource-1' // from the matched policy params
+                  }
+                },
+                subject: {
+                  'user-id': 'test-user-id', // from the access request
+                  params: {
+                    principalTest1: 'test-principal-1' // from the matched policy params
+                  }
+                },
+                action: {
+                  params: {
+                    actionTest1: 'test-action-1' // from the matched policy params
+                  }
+                },
+                environment: {
+                  ip: '192.168.0.10' // from the access request
+                }
+              });
+              return true;
+            }
+          },
+          // these are the params that findPolicySet matcher would return...
+          params: {
+            resource: {
+              resourceTest1: 'test-resource-1'
+            },
+            action: {
+              actionTest1: 'test-action-1'
+            },
+            principal: {
+              principalTest1: 'test-principal-1'
+            }
+          }
+        },
+        {
+          // policy 2 access request should have params from the matched policy params only
+          policy: {
+            // mock the isSpecificationSatisfied method to populate our spy...
+            isSpecificationSatisfied: (accessRequest) => {
+              isExpectedPolicy2AccessRequest = isEqualObject(accessRequest, {
+                resource: {
+                  params: {
+                    resourceTest2: 'test-resource-2' // from the matched policy params
+                  }
+                },
+                subject: {
+                  'user-id': 'test-user-id', // from the access rquest
+                  params: {
+                    principalTest2: 'test-principal-2' // from the matched policy params
+                  }
+                },
+                action: {
+                  params: {
+                    actionTest2: 'test-action-2' // from the matched policy params
+                  }
+                },
+                environment: {
+                  ip: '192.168.0.10' // from the access request
+                }
+              });
+              return true;
+            }
+          },
+          // these are the params that findPolicySet matcher would return...
+          params: {
+            resource: {
+              resourceTest2: 'test-resource-2'
+            },
+            action: {
+              actionTest2: 'test-action-2'
+            },
+            principal: {
+              principalTest2: 'test-principal-2'
+            }
+          }
+        }
+      ];
+      const mockAccessRequest = {
+        subject: {
+          'user-id': 'test-user-id'
+        },
+        environment: {
+          ip: '192.168.0.10'
+        }
+      };
+      makePolicyDecisionPoint(mockFindPolicySet as unknown as IMatchAccessRequestToPolicy)(mockAccessRequest as unknown as IAccessRequest);
+      assert.isTrue(isExpectedPolicy1AccessRequest, 'Expected the policy 1 params to be found in policy 1 isSpecificationSatisfied access request');
+      assert.isTrue(isExpectedPolicy2AccessRequest, 'Expected the policy 2 params to be found in policy 2 isSpecificationSatisfied access request');
     });
   });
 });

@@ -829,17 +829,17 @@ and provided to the assertion as the expected value. If the variable can not be
 found, ```undefined``` will be used.
 
 To specify variables in your assertions, the template literal format is used by wrapping the property in
-```${...}``` such as ```${subject.user.id}```.
+```${...}``` such as ```${resource.params.user_id}```.
 
 In the following example, the authenticated user identified by the variable
-"subject.id" must match the ID in the URI of "/users/:id" which can be found at
-the variable "resource.params.id".
+"subject.user-id" must match the ID in the URI of "/users/:user_id" which will
+be found at the property "resource.params.user_id".
 
 ```json
 {
   "specification": {
     "isEqual": {
-      "attribute": "subject.user.id",
+      "attribute": "subject.user-id",
       "expected": "${resource.params.user_id}"
     }
   }
