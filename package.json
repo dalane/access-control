@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/dalane/access-control#readme",
   "dependencies": {
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "url-pattern": "1.0.3"
   },
   "devDependencies": {
