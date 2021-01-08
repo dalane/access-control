@@ -1,6 +1,6 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/app/index.js",
   "types": "build/app/index.d.ts",
@@ -9,8 +9,8 @@
   ],
   "scripts": {
     "compile": "rm -rf ./build && tsc",
-    "prepare": "yarn run compile",
-    "pretest": "yarn run compile",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "example": "node ./examples/web/index.js",
