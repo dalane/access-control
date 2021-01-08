@@ -1,6 +1,6 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/app/index.js",
   "types": "build/app/index.d.ts",
@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/dalane/access-control#readme",
   "dependencies": {
-    "lodash": "4.17.15",
+    "lodash": "^4.17.20",
     "url-pattern": "1.0.3"
   },
   "devDependencies": {
@@ -35,7 +35,7 @@
     "@types/mocha": "5.2.7",
     "@types/node": "12.11.1",
     "chai": "4.2.0",
-    "mocha": "6.2.2",
+    "mocha": "^6.2.3",
     "nyc": "14.1.1",
     "prettier": "1.19.1",
     "source-map-support": "0.5.13",
