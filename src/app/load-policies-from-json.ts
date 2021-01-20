@@ -1,67 +1,71 @@
-import { assign, findPathsByPattern, isFile, merge, assertIsString, readFile } from './helpers';
+import { findPathsByPattern, isFile, assertIsString, readFile, merge } from './helpers';
 import { IPolicy } from './policy/index';
 import { join } from 'path';
-
-export const findPolicyFiles = async (basePath:string):Promise<string[]> => {
-  return findPathsByPattern(basePath)('**/*.policy.json');
-};
-
-export const loadFilesFromPaths = async (paths:string[]):Promise<IPolicy[]> => {
-  const policies = [];
-  for (const path of paths) {
-    if (await isFile(path)) {
-      policies.push(merge({}, await readJsonFile(path), { path: path }));
-    }
-  }
-  return policies;
-};
 
 /**
  * Given a base path, load all the JSON files matching all paths that end in
  * ".policy.json"...
  * @param basePath
  */
-export const loadJsonPolicyFiles = async (basePath:string):Promise<IPolicy[]> => {
+export async function loadJsonPolicyFiles(basePath: string): Promise<IPolicy[]> {
   const policyFilePaths = await findPolicyFiles(basePath);
   const policies = await loadFilesFromPaths(policyFilePaths);
-  return mergeExtendedPolicies(policies);
+  const mergedPolicies = mergeExtendedPolicies(policies);
+  return mergedPolicies;
 };
 
-export const mergeExtendedPolicies = (policies:IPolicy[]) => {
-  const getAllParents = getParentPolicies(policies);
+export function mergeExtendedPolicies(policies: IPolicy[]): IPolicy[] {
   const consolidatedPolicies = [];
   // find any files that extend others and apply the extension...
   for (const policy of policies) {
-    const allParentPolicies = getAllParents(policy)(policy.path);
+    const allParentPolicies = getParentPolicies(policies, policy, policy.path);
     // assign all policy sources from left to right overwriting the cumulative
     // policy with the right most policy...
-    const consolidatedPolicy = assign({}, ...allParentPolicies, policy);
+    const consolidatedPolicy = [ ...allParentPolicies, policy ].reduce((consolidated, policy) => {
+      return merge(consolidated, policy);
+    }, <IPolicy>{});
+    // const consolidatedPolicy = {...allParentPolicies, ...policy };
     consolidatedPolicies.push(consolidatedPolicy);
   }
   return consolidatedPolicies;
 };
 
-export const getParentPolicies = (allLoadedPolicies) => {
-  const getPolicyByPath = (policies:any[]) => (path:string):IPolicy => policies.find(item => item.path === path);
-  return (currentPolicy) => (currentPolicyPath):any[] => {
-    if (currentPolicy.extends) {
-      // the path provided may be a path relative to to the policy file so
-      // we merge to the two policies together into a new policy...
-      const pathToParent = fullPathToParent(currentPolicyPath)(currentPolicy.extends);
-      const parentPolicy = getPolicyByPath(allLoadedPolicies)(pathToParent);
-      const allParentPolicies = getParentPolicies(allLoadedPolicies)(parentPolicy)(pathToParent);
-      // we concat the current parent policy to the bottom of all the parent policies
-      // that we have obtained recursively and then return to the caller...
-      return allParentPolicies.concat([parentPolicy]);
-    } else {
-      // if there is no parent we return an empty array to the caller...
-      return [];
-    }
-  };
+export async function findPolicyFiles(basePath: string): Promise<string[]> {
+  return findPathsByPattern(basePath)('**/*.policy.json');
 };
 
-const isAbsolutePath = (path:string) => (path.substr(0, 1) === '/');
-const removeFileNameFromPath = (path) => path.substr(0, path.lastIndexOf('/'));
+export async function loadFilesFromPaths(paths: string[]): Promise<IPolicy[]> {
+  const policies = [];
+  for (const path of paths) {
+    if (await isFile(path)) {
+      const content = await readJsonFile(path);
+      policies.push({ ...content, path });
+    }
+  }
+  return policies;
+};
+
+
+const getPolicyByPath = (policies: IPolicy[], path: string): IPolicy => policies.find(item => item.path === path);
+
+export function getParentPolicies(allLoadedPolicies: IPolicy[], currentPolicy: IPolicy, currentPolicyPath: string): IPolicy[] {
+  if (currentPolicy?.extends !== undefined) {
+    // the path provided may be a path relative to to the policy file so
+    // we merge to the two policies together into a new policy...
+    const pathToParent = fullPathToParent(currentPolicyPath, currentPolicy.extends);
+    const parentPolicy = getPolicyByPath(allLoadedPolicies, pathToParent);
+    const allParentPolicies = getParentPolicies(allLoadedPolicies, parentPolicy, pathToParent);
+    // we concat the current parent policy to the bottom of all the parent policies
+    // that we have obtained recursively and then return to the caller...
+    return [ ...allParentPolicies, parentPolicy ];
+  } else {
+    // if there is no parent we return an empty array to the caller...
+    return [];
+  }
+}
+
+const isAbsolutePath = (path: string) => (path.substr(0, 1) === '/');
+const removeFileNameFromPath = (path: string) => path.substr(0, path.lastIndexOf('/'));
 
 
 /**
@@ -69,7 +73,7 @@ const removeFileNameFromPath = (path) => path.substr(0, path.lastIndexOf('/'));
  * to the path in the extend property. This is identified by
  * whether the path begins with a "." e.g. "extends": "../../another.policy.json"
  */
-export const fullPathToParent = (pathToPolicy:string) => (extendsPathToParent:string) => {
+export const fullPathToParent = (pathToPolicy: string, extendsPathToParent: string) => {
   if (isAbsolutePath(extendsPathToParent)) {
     return extendsPathToParent;
   }
@@ -78,14 +82,14 @@ export const fullPathToParent = (pathToPolicy:string) => (extendsPathToParent:st
   return join(directoryOfCurrentPolicy, extendsPathToParent);
 };
 
-const getFileExtension = (path:string) => {
+const getFileExtension = (path: string) => {
   assertIsString(path, 'fileName must be a string');
   const extensionSeperatorIndex =  path.lastIndexOf('.');
   // if the index is -1 there is no separator, if it's 0 then it's a dotfile...
   return (extensionSeperatorIndex < 1) ? '' : path.substr(extensionSeperatorIndex + 1);
 };
 
-export const readJsonFile = async (path:string) => {
+export const readJsonFile = async (path: string) => {
   const extension = getFileExtension(path);
   if (extension !== 'json') {
     throw new Error('The path to the config file must refer to a JSON file.');

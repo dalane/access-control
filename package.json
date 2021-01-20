@@ -1,16 +1,14 @@
 {
   "name": "@dalane/access-control",
-  "version": "0.3.9",
+  "version": "0.4.0",
   "description": "An attribute based access control system for javascript applications",
   "main": "build/app/index.js",
   "types": "build/app/index.d.ts",
-  "files": [
-    "build/app/**/*"
-  ],
   "scripts": {
-    "compile": "rm -rf ./build && tsc",
-    "prepare": "npm run compile",
-    "pretest": "npm run compile",
+    "prebuild": "rm -rf ./build",
+    "build": "tsc",
+    "prepare": "npm run build",
+    "pretest": "npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "example": "node ./examples/web/index.js",
@@ -20,7 +18,7 @@
     "type": "git",
     "url": "git+https://github.com/dalane/access-control.git"
   },
-  "author": "Dallas Ewing <developers@dalane.io>",
+  "author": "Dalane Consulting Ltd <info@dalane.co.uk>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/dalane/access-control/issues"
@@ -36,7 +34,7 @@
     "@types/node": "12.11.1",
     "chai": "4.2.0",
     "mocha": "^6.2.3",
-    "nyc": "14.1.1",
+    "nyc": "^15.1.0",
     "prettier": "1.19.1",
     "source-map-support": "0.5.13",
     "tslint": "5.20.1",

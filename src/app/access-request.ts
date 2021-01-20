@@ -1,14 +1,14 @@
 export interface IAccessRequest {
-  subject:{
-    [index:string]:any
+  subject: {
+    [index: string]: any
   };
   action: {
-    [index:string]:any
+    [index: string]: any
   };
   resource: {
-    [index:string]:any
+    [index: string]: any
   };
   environment: {
-    [index:string]:any
+    [index:string ]: any
   };
 }

@@ -32,12 +32,6 @@ For more information on ABAC see the ["Guide to Attribute Based Access Control (
 ## Installation
 
 ```
-yarn add @dalane/access-control
-```
-
-or
-
-```
 npm install --save @dalane/access-control
 ```
 
@@ -367,7 +361,7 @@ policy to the property ```user-id``` in the ```subject``` property of the access
 request.
 
 ```typescript
-import { principal } from '@dalane/barbican'
+import { principal } from '@dalane/access-control'
 const { compilePrincipal } = principal;
 
 const accessRequest:IAccessRequest = {
@@ -405,7 +399,7 @@ Segregation (CQRS) there is a built-in action compiler that matches access
 requests to the policy action.
 
 ```typescript
-import { action } from "@dalane/barbican";
+import { action } from "@dalane/access-control";
 const { compileCommandQueryAction } = action;
 ```
 
@@ -464,7 +458,7 @@ the ```action``` property of the access request.
 
 
 ```typescript
-import { action } from "@dalane/barbican";
+import { action } from "@dalane/access-control";
 
 const { compileHttpAction } = action;
 
@@ -488,7 +482,31 @@ to. The value of the the resource is specified in the policy using the
 {
   "resource": "<identifier>"
 }
+
+// or can be an array of values
+{
+	"resource: [
+		"...",
+		"..."
+	]
+}
 ```
+
+The value for each resource must be a string. The compiler matches these values
+using a "schema" parameter which tells the compiler which schema to use to determine
+if the policy is matched to the resource.
+
+```javascript
+{
+	"resource": "<schema:><schema-pattern>"
+}
+```
+
+The following are built-in resource schemas:
+
+| schema | description |
+| :--- | :---|
+| ```path:``` | Uses a URL pattern matcher to match the pattern defined in the schema to the access request ```resource.path``` parameter. For example ```{ resource: "path:/path/to/resource" }``` will be matched to the access request ```{ resource: { path: "/path/to/resource" } }```. When building your access request you must ensure that ```resource.path``` is defined. |
 
 #### URL Pattern Resource
 

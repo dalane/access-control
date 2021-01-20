@@ -4,11 +4,13 @@ import glob from 'glob';
 import { assign as _assign, isEqual as _isEqual, merge as _merge } from 'lodash';
 import { join } from 'path';
 import { promisify } from 'util';
+import { IAccessRequest } from './access-request';
+import { IIsSatisfiedByResult, makeIsSatisfiedByResult } from './policy';
 
 export const assign = (...sources:object[]) => _assign(...sources);
 export const merge = (...sources:object[]) => _merge(...sources);
 
-export const getDeepValue = (object:object) => (parts:string[]):any => {
+export const getDeepValue = (object:object, parts:string[]):any => {
   let current = object;
   for (const part of parts) {
     if (typeof current[part] === 'undefined') {
@@ -52,7 +54,7 @@ export const throwAssertionError = (message:string = 'AssertionError', actual?:a
   });
 };
 
-export function assert(value:boolean, message?:string) {
+export function assert(value:boolean, message?:string): asserts value is true {
   if (value === false) {
     throwAssertionError(message);
   }
@@ -78,4 +80,12 @@ export function assertIsBoolean(value:any, message?:string):asserts value is boo
 
 export function assertIsArray<T>(value:T[], message?:string):asserts value is T[] {
   assert(Array.isArray(value), message);
+}
+
+export function isSatisfiedByTrueFn(accessRequest: IAccessRequest): IIsSatisfiedByResult {
+  return makeIsSatisfiedByResult(true);
+}
+
+export function isSatisfiedByFalseFn(accessRequest: IAccessRequest): IIsSatisfiedByResult {
+  return makeIsSatisfiedByResult(false);
 }

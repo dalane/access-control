@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "resource": "/secure",
-  "principal": "anonymous",
+  "resource": "path:/secure",
+  "principal": "userid:anonymous",
   "name": "Anonymous users are forbidden",
-  "action": "GET",
+  "action": "http:GET",
   "effect": "deny",
   "specification": {}
 }

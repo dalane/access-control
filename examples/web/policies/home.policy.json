@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "resource": "/",
+  "resource": "path:/",
   "name": "Any User Permitted",
   "principal": "*",
-  "action": "GET",
+  "action": "http:GET",
   "effect": "allow",
   "specification": {}
 }

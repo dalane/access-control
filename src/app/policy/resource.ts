@@ -1,32 +1,49 @@
 import UrlPattern from 'url-pattern';
 import { IAccessRequest } from '../access-request';
-import { merge, assert, assertIsString } from '../helpers';
-import { IIsSatisfiedByFunction, makeIsSatisfiedByResult } from '.';
+import { assert, assertIsString, assertIsDefined, isSatisfiedByTrueFn } from '../helpers';
+import { IIsPolicyMatchFn, makeIsSatisfiedByResult } from '.';
+import { PolicySchemeMatchDefinition } from './parser';
 
-export interface ICompileResource {
-  (value:any):IIsSatisfiedByFunction;
+/*
+  BUILT-IN RESOURCE PARSERS
+*/
+
+export enum BuiltInResourceParserSchemes {
+  PATH = 'path',
 }
 
-export const compileUrlPatternResource:ICompileResource = (value:any) => {
-  const matchPathFunction = (pattern:UrlPattern) => (path:string) => pattern.match(path);
-  if (undefined === value) {
-    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(false);
-  }
+export function matchUrlPatternResourceFn(value: string): IIsPolicyMatchFn {
+  assertIsDefined(value, 'A value for the resource selector is required.');
   assertIsString(value, 'The value for the resource must be a string');
-  assert(value.length !== 0, 'The value for the resource is an empty string');
-  // if the resource identifier is a wildcard * then we will always return true as a match
-  // otherwise, we will match to a url pattern...
+  assert(value.length !== 0, 'The value for the resource is an empty string')
   if (value === '*') {
-    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(true);
+    return isSatisfiedByTrueFn;
   } else {
-    const match = matchPathFunction(new UrlPattern(value));
+    const matchFn = createUrlPatternMatcher(value);
     return (accessRequest:IAccessRequest) => {
       const resourcePath = accessRequest?.resource?.path;
       if (resourcePath === undefined) {
         return makeIsSatisfiedByResult(false);
       }
-      const pathMatch = match(resourcePath);
-      return (null !== pathMatch) ? makeIsSatisfiedByResult(true, merge({}, pathMatch)) : makeIsSatisfiedByResult(false);
+      const pathMatch = matchFn(resourcePath);
+      return (null !== pathMatch) ? makeIsSatisfiedByResult(true, { ...pathMatch }) : makeIsSatisfiedByResult(false);
     };
   }
-};
+}
+
+/**
+ * A functional wrapper for UrlPattern library
+ * @param urlPatternStr {string} The url pattern to match
+ * @returns {function} A function that given a url matches it to urlPatternStr
+ */
+function createUrlPatternMatcher(urlPatternStr: string): (url:string) => any {
+  const pattern = new UrlPattern(urlPatternStr);
+  return (url: string) => pattern.match(url);
+}
+
+export const defaultResourcePolicyMatchers: PolicySchemeMatchDefinition[] = [
+  {
+    scheme: BuiltInResourceParserSchemes.PATH,
+    matchFn: matchUrlPatternResourceFn
+  }
+];

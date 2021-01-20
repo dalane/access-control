@@ -1,7 +1,4 @@
-const { policyDecisionPoint, policy, accessResponse } = require('../../build/app');
-const { makePolicyDecisionPoint, makeFindPolicySet } = policyDecisionPoint;
-const { createDefaultCompiledPolicies } = policy;
-const { ACCESS_DECISION } = accessResponse;
+const { loadJsonPolicyFiles, createPolicyDecisionPoint, ACCESS_DECISION, POLICY_MATCH_FNS } = require('../../build/app');
 const { createServer } = require('http');
 const { join } = require('path');
 require('source-map-support').install();
@@ -82,7 +79,7 @@ const handleRequest = (paths) => (request, response) => {
 
 const makeAccessRequest = (method, path, identity, request) => ({
   subject: {
-    'user-id': identity.id,
+    userid: identity.id,
     name: identity.name,
     groups: identity.groups
   },
@@ -145,16 +142,15 @@ const main = async (paths, port) => {
   try {
     // create the full path to the policies folder...
     const policiesFolder = join(__dirname, 'policies');
-    // create the compiled policies using the default options of http methods,
-    // url pattern for resource, and subject user-id for the principal...
-    const compiledPolicies = await createDefaultCompiledPolicies(policiesFolder);
-    // create the findPolicySet function which will take an access request and
-    // return any policies that match an action, principal and resource...
-    const findPolicySet = makeFindPolicySet(compiledPolicies);
+    const policies = await loadJsonPolicyFiles(policiesFolder);
     // create the policy decision point which will obtain a policy set and then
     // give an access response with an allow, deny or not-applicable decision
     // for a given access request..
-    const pdp = makePolicyDecisionPoint(findPolicySet);
+    const pdp = createPolicyDecisionPoint(policies, {
+      actions: [ ...POLICY_MATCH_FNS.actions ],
+      principals: [ ...POLICY_MATCH_FNS.principals ],
+      resources: [ ...POLICY_MATCH_FNS.resources ],
+    });
     // the policy execution point creates the access request, passes it to the
     // policy decision point, get the access response and then return an error
     // to the client or allow the request to continue...

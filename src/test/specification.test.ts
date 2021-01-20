@@ -1,8 +1,9 @@
-import { ASSERTIONS, COMPOSITES, ISpecification, anyOf, allOf, makeCompileAssertions, makeCompileCompositeAssertions, makeCompileSpecification, ICompileSpecificationFunc, ICompileCompositeSpecifications } from "../app/policy/specification";
 import { assert } from 'chai';
+import { IAccessRequest } from '../app/access-request';
+import { ICompiledPolicy } from '../app/policy';
+import { allOf, anyOf, ASSERTIONS, COMPOSITES, CompileCompositeAssertionsFn, makeCompileAssertions, makeCompileCompositeAssertions } from '../app/policy/assertion';
+import { ICompileSpecificationsFn, ISpecification, makeCompileSpecification } from '../app/policy/specification';
 import { EmptyAccessRequest } from "./fixtures/test-data";
-import { merge } from "../app/helpers";
-import { IAccessRequest } from "../app/access-request";
 
 describe("Compiling a specification", () => {
   describe('assertion functions', () => {
@@ -465,18 +466,17 @@ describe("Compiling a specification", () => {
     });
   });
   describe('Compiling composite assertions', () => {
+    const mockCompileSpecification: ICompileSpecificationsFn = <ICompileSpecificationsFn><unknown>(() => {});
     it('throws an assertion error if there is no assertion in the specification', () => {
       const composites = {};
-      const mockCompileSpecification = () => {};
       const specification = {};
       const itThrows = () => makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
       assert.throws(itThrows, 'An assertion name is required for a composite assertion');
     });
     it('throws an assertion error if the composite assertion value is not an array', () => {
       const composites = {
-        testCompositeFn: (compiledssertions) => (accessRequest:IAccessRequest) => true
+        testCompositeFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
       };
-      const mockCompileSpecification = () => {};
       const specification = {
         testCompositeFn: {}
       } as unknown as ISpecification;
@@ -485,9 +485,8 @@ describe("Compiling a specification", () => {
     });
     it('returns undefined if a composite assertion function was not found', () => {
       const composites = {
-        testCompositeFn: (compiledssertions) => (accessRequest:IAccessRequest) => true
+        testCompositeFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
       };
-      const mockCompileSpecification = () => {};
       const specification = {
         anotherTestFn: [] // this proprty "anotherTestFn" doesn't exist in the composites functions above...
       };
@@ -515,7 +514,7 @@ describe("Compiling a specification", () => {
       const mockCompileAssertion = () => {};
       const specification = undefined as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const sut = makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      const sut = makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
       assert.isFunction(sut, 'expected a function to be returned');
       assert.isTrue(sut(mockAccessRequest), 'expected an undefined specification to return true');
     });
@@ -524,34 +523,34 @@ describe("Compiling a specification", () => {
       const mockCompileAssertion = () => {};
       const specification = {} as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const sut = makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      const sut = makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
       assert.isFunction(sut, 'expected a function to be returned');
       assert.isTrue(sut(mockAccessRequest), 'expected an empty specification to return true');
     });
     it('throws an error if a specification is provided but is not an object', () => {
-      const mockCompileComposite = (compileSpecification:ICompileSpecificationFunc) => () => {};
+      const mockCompileComposite = (compileSpecification:ICompileSpecificationsFn) => () => {};
       const mockCompileAssertion = () => {};
       const specification = [] as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
       assert.throws(itThrows, 'Specification must be an object');
     });
     it('throws an error if an assertion name is not recognised', () => {
       // if both teh compile composite and compile assertion functions return
       // undefined then compile specificaiton will throw an assertion error...
-      const mockCompileComposite = (compileSpecification:ICompileSpecificationFunc) => (specification:ISpecification) => undefined;
+      const mockCompileComposite = (compileSpecification:ICompileSpecificationsFn) => (specification:ISpecification) => undefined;
       const mockCompileAssertion = (specification:ISpecification) => undefined;
       const specification = {
         test: {} // specify an assertion name to avoid triggering an empty spec error
       } as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
       assert.throws(itThrows, 'The assertion "test" does not exist');
     });
     it('throws an error if more than one assertion in a specification object', () => {
             // if both teh compile composite and compile assertion functions return
       // undefined then compile specificaiton will throw an assertion error...
-      const mockCompileComposite = (compileSpecification:ICompileSpecificationFunc) => (specification:ISpecification) => undefined;
+      const mockCompileComposite = (compileSpecification:ICompileSpecificationsFn) => (specification:ISpecification) => undefined;
       const mockCompileAssertion = (specification:ISpecification) => undefined;
       const specification = {
         isEqual: {
@@ -562,7 +561,7 @@ describe("Compiling a specification", () => {
         }
       } as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as ICompileCompositeSpecifications)(mockCompileAssertion as unknown as ICompileSpecificationFunc)(specification);
+      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
       assert.throws(itThrows, 'Only one assertion per specification is allowed');
     });
     it('a complex compiled specification returns true as expected', () => {
@@ -591,7 +590,7 @@ describe("Compiling a specification", () => {
           }
         ]
       };
-      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES))(makeCompileAssertions(ASSERTIONS))(specification);
+      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES), makeCompileAssertions(ASSERTIONS))(specification);
       assert.isTrue(sut({
         action: {},
         subject: {
@@ -630,7 +629,7 @@ describe("Compiling a specification", () => {
           }
         ]
       };
-      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES))(makeCompileAssertions(ASSERTIONS))(specification);
+      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES), makeCompileAssertions(ASSERTIONS))(specification);
       assert.isFalse(sut({
         action: {},
         subject: {

@@ -1,23 +1,35 @@
 import { IAccessRequest } from "../access-request";
-import { assert } from "../helpers";
-import { IIsSatisfiedByFunction, makeIsSatisfiedByResult } from "./index";
+import { assertIsDefined, assertIsString, isSatisfiedByTrueFn, } from "../helpers";
+import { IIsPolicyMatchFn, makeIsSatisfiedByResult } from "./index";
+import { PolicySchemeMatchDefinition } from "./parser";
 
-export type CompilePrincipalFunc = (value:any) => IIsSatisfiedByFunction;
+/*
+  BUILT-IN PRINCIPAL PARSERS
+*/
 
-export const compileUserIdPrincipal:CompilePrincipalFunc = (value:string):IIsSatisfiedByFunction => {
-  if (undefined === value) {
-    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(false);
-  }
-  assert('string' === typeof value, 'The value of the policy principal must be a string');
+export enum BuiltInPrincipalParserSchemes {
+  USERID = 'userid',
+}
+
+export function matchUserIdPrincipalFn(value: string): IIsPolicyMatchFn {
+  assertIsDefined(value, 'A value for the principal policy is required.');
+  assertIsString(value, 'The value for the principal must be a string');
   if (value === '*') {
-    return (accessRequest:IAccessRequest) => makeIsSatisfiedByResult(true);
+    return isSatisfiedByTrueFn;
   } else {
     return (accessRequest:IAccessRequest) => {
-      const requestedUserId = accessRequest?.subject?.['user-id'];
-      if (requestedUserId === undefined) {
+      const accessReqUserId = accessRequest?.subject?.userid;
+      if (accessReqUserId === undefined) {
         return makeIsSatisfiedByResult(false);
       }
-      return (value === requestedUserId) ? makeIsSatisfiedByResult(true) : makeIsSatisfiedByResult(false);
+      return (value === accessReqUserId) ? makeIsSatisfiedByResult(true) : makeIsSatisfiedByResult(false);
     };
   }
-};
+}
+
+export const defaultPrincipalPolicyMatchers: PolicySchemeMatchDefinition[] = [
+  {
+    scheme: BuiltInPrincipalParserSchemes.USERID,
+    matchFn: matchUserIdPrincipalFn,
+  }
+];

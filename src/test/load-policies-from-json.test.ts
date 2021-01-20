@@ -1,7 +1,8 @@
 import { assert } from 'chai';
-import { mergeExtendedPolicies, findPolicyFiles, loadFilesFromPaths } from '../app/load-policies-from-json';
-import { IPolicy, POLICY_EFFECT } from '../app/policy/index';
 import { join } from 'path';
+import { findPolicyFiles, loadFilesFromPaths, mergeExtendedPolicies } from '../app/load-policies-from-json';
+import { IPolicy } from '../app/policy';
+import { POLICY_EFFECT } from '../app/policy/effect';
 
 describe('Loading policies from JSON files', () => {
   const FIXTURES_BASE_PATH = join(process.cwd(), 'examples/test');

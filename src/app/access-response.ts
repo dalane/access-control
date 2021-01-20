@@ -7,8 +7,8 @@ export enum ACCESS_DECISION {
 }
 
 export interface IAccessResponse {
-  decision:ACCESS_DECISION;
-  messages:string[];
-  // obligations:any[]; TODO: version 2 policies...
-  failedPolicies?:IPolicy[];
+  decision: ACCESS_DECISION;
+  messages?: string[];
+  // TODO: add obligations to version 2 policies...
+  failedPolicies?: IPolicy[];
 }
