@@ -6,10 +6,10 @@ access request on ```principal```, ```resource```, and / or ```action```. The
 Policy Set is returned to the Policy Decision Point to make a determination on
 whether to allow or deny an access request.
 
-A filter function implements the type ```CreatePolicyFilterFn```.
+A filter function implements the type ```PolicyFilterFn```.
 
 ```typescript
-type CreatePolicyFilterFn = (policyValues: string | string[]) => IsPolicyMatchFn;
+type PolicyFilterFn = (pattern: string) => IsPolicyMatchFn;
 type IsPolicyMatchFn = (accessRequest: IAccessRequest) => IIsSatisfiedByResult;
 ```
 
@@ -22,7 +22,7 @@ The example below shows how to create a filter function.
 ```typescript
 import { IAccessRequest, isSatisfiedByResult, IIsSatisfiedByResult } from '@dalane/access-control';
 
-const filterOperationIdFn: CreatePolicyFilterFn = (pattern: string): IsPolicyMatchFn => {
+const filterOperationIdFn: PolicyFilterFn = (pattern: string): IsPolicyMatchFn => {
 	return (accessRequest: IAccessRequest): IIsSatisfiedByResult => {
 		const operationId = accessRequest?.action?.operationId;
 		if (operationId === undefined) {
@@ -41,7 +41,7 @@ import { createPolicyAdministrationPointFn, PolicyAdministrationPointFn, PolicyD
 
 const definitions: PolicyDefinitions = {
 	actions: {
-		// [scheme: string]: CreatePolicyFilterFn
+		// [scheme: string]: PolicyFilterFn
 		operationid: filterOperationIdFn,
 	},
 	// register for principal and resource filter functions...

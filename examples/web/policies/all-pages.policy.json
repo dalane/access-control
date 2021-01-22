@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "resource": "*",
+	"name": "Logged in User Permitted",
+	"description": "Authenticated users can access all pages but only for GET requests",
+  "principal": "userid:authenticated",
+  "action": "http:GET",
+  "effect": "allow",
+  "specification": {}
+}

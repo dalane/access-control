@@ -1,8 +1,13 @@
-const { createOkHtmlResponse } = require("../responses");
+const { createOkHtmlResponse, createRedirectResponse, setAuthCookie } = require("../responses");
 const { createLoginView } = require("../views/login");
 
 module.exports.loginController = (request, response) => {
   const ok = createOkHtmlResponse(response);
-  const view = createLoginView(request.accessResponse);
+  const redirect = createRedirectResponse(response);
+  if (request.method.toUpperCase() === 'POST') {
+    setAuthCookie(response);
+    return redirect('/secure');
+  }
+  const view = createLoginView(request.accessResponse, request.authenticatedUser);
   ok(view);
 }

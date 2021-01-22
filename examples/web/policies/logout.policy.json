@@ -1,9 +1,10 @@
 {
   "version": 1,
   "resource": "path:/logout",
-  "principal": "userid:anonymous",
+  "principal": "userid:authenticated",
   "name": "Only Logged In Users Can Logout",
-  "action": "http:GET",
-  "effect": "deny",
+  "description": "Authenticated users can post on the logout page",
+  "action": [ "http:POST" ],
+  "effect": "allow",
   "specification": {}
 }

@@ -1,22 +1,17 @@
 const { loadJsonPolicyFiles, createPolicyDecisionPointFn, createPolicyAdministrationPointFn, POLICY_MATCH_FNS } = require('../../build/app');
 const { createServer } = require('http');
 const { join } = require('path');
-const { policyExecutionPoint } = require('./pep');
+const { createPolicyExecutionPoint } = require('./pep');
 const { homeController } = require('./controllers/home');
 const { logoutController } = require('./controllers/logout');
 const { loginController } = require('./controllers/login');
 const { secureController } = require('./controllers/secure');
-const { createNotFoundResponse } = require('./responses');
+const { createNotFoundResponse, setAuthCookie } = require('./responses');
+const { createNotFoundView } = require('./views/notfound');
+const { authenticateRequest } = require('./auth/authentication');
 require('source-map-support').install();
 
 const PORT = 8080;
-const authenticateRequest = request => {
-  request.authenticatedUser = {
-    id: 'anonymous',
-    name: 'Anonymous',
-    groups: []
-  };
-}
 
 const CONTROLLERS = {
   '/': homeController,
@@ -32,13 +27,14 @@ const handleRequest = (controllers) => (request, response) => {
   request.query = query;
   if (controller === undefined) {
     const notFound = createNotFoundResponse(response);
-    return notFound();
+    const view = createNotFoundView(request.accessResponse, request.authenticatedUser);
+    return notFound(view);
   }
   controller(request, response);
 }
 
-const listener = (authenticateRequest, pep, handleRequest) => (request, response) => {
-  authenticateRequest(request);
+const listener = (pep, handleRequest) => (request, response) => {
+  authenticateRequest(request, response);
   if (pep(request, response)) {
     handleRequest(request, response);
   }
@@ -64,8 +60,8 @@ const main = async (paths, port) => {
     // the policy execution point creates the access request, passes it to the
     // policy decision point, get the access response and then return an error
     // to the client or allow the request to continue...
-    const pep = policyExecutionPoint(pdp);
-    const httpServer = createServer(listener(authenticateRequest, pep, handleRequest(paths)));
+    const pep = createPolicyExecutionPoint(pdp);
+    const httpServer = createServer(listener(pep, handleRequest(paths)));
     httpServer.on('listening', () => logOnListening(port));
     httpServer.on('close', () => logOnClose(port));
     httpServer.listen(port);

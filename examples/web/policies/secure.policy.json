@@ -3,6 +3,7 @@
   "resource": "path:/secure",
   "principal": "userid:anonymous",
   "name": "Anonymous users are forbidden",
+  "description": "Only authenticated users can view the secure page",
   "action": "http:GET",
   "effect": "deny",
   "specification": {}

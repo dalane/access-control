@@ -2,9 +2,9 @@
   "version": 1,
   "resource": "path:/login",
   "principal": "userid:anonymous",
-  "name": "Anonymous Users Only Can Login",
-  "description": "Anonymous users are allowed, logged in users are forbidden",
-  "action": "http:GET",
+  "name": "Login Page",
+  "description": "Anonymous users are allowed and they can post",
+  "action": [ "http:GET", "http:POST" ],
   "effect": "allow",
   "specification": {}
 }

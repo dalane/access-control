@@ -1,20 +1,23 @@
 const { createForbiddenResponse } = require('./responses');
 const { ACCESS_DECISION } = require('../../build/app');
+const { createForbiddenView } = require('./views/forbidden');
 
 // the policy execution point creates the access request, passes it to the
 // policy decision point and then handles the access response from the polcy
 // decision point
-module.exports.policyExecutionPoint = pdp => (request, response) => {
+module.exports.createPolicyExecutionPoint = pdp => (request, response) => {
   let [path, query] = request.url.split('?');
   const accessRequest = makeAccessRequest(request.method, path, request.authenticatedUser, request);
   const accessResponse = pdp(accessRequest);
   const forbidden = createForbiddenResponse(response);
   if (accessResponse.decision === ACCESS_DECISION.NOT_APPLICABLE) {
-    forbidden(accessResponse, 'You have not been granted access as your request did not match any of our policies.');
+    const view = createForbiddenView(accessResponse, request.authenticatedUser, `You have not been granted access as your request did not match any of our policies.`);
+    forbidden(view);
     return false;
   }
   if (accessResponse.decision === ACCESS_DECISION.DENY) {
-    forbidden(accessResponse, 'You have not been granted access as your request did not satisfy our policies.');
+    const view = createForbiddenView(accessResponse, request.authenticatedUser, `You have not been granted access as your request did not satisfy our policies.`);
+    forbidden(view);
     return false;
   }
   request.accessResponse = accessResponse;
@@ -26,7 +29,7 @@ function makeAccessRequest(method, path, identity, request) {
     subject: {
       userid: identity.id,
       name: identity.name,
-      groups: identity.groups
+      authenticated: identity.authenticated,
     },
     action: {
       method: method

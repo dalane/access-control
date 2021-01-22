@@ -1,9 +1,8 @@
-const { createOkTextResponse } = require("../responses");
-const { createHomeView } = require("../views/home");
+const { createOkHtmlResponse } = require("../responses");
 const { createSecureView } = require("../views/secure");
 
 module.exports.secureController = (request, response) => {
-	const ok = createOkTextResponse(response);
-	const view = createSecureView();
+	const ok = createOkHtmlResponse(response);
+	const view = createSecureView(request.accessResponse, request.authenticatedUser);
 	ok(view);
 }

@@ -4,8 +4,10 @@ import { IsPolicyMatchFn, IIsSatisfiedByResult, isSatisfiedByResult } from "./in
 
 export type CreatePolicyFilterFn = (policyValues: string | string[]) => IsPolicyMatchFn;
 
+export type PolicyFilterFn = (pattern: string) => IsPolicyMatchFn;
+
 export interface IPolicyFilterDefinitions {
-  [scheme: string]: CreatePolicyFilterFn;
+  [scheme: string]: PolicyFilterFn;
 }
 
 /**
