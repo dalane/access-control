@@ -1,6 +1,9 @@
-const { loadJsonPolicyFiles, createPolicyDecisionPoint, ACCESS_DECISION, POLICY_MATCH_FNS } = require('../../build/app');
+const { loadJsonPolicyFiles, createPolicyDecisionPointFn, createPolicyAdministrationPointFn, ACCESS_DECISION, POLICY_MATCH_FNS } = require('../../build/app');
 const { createServer } = require('http');
 const { join } = require('path');
+const { policyExecutionPoint } = require('./pep');
+const { homeController } = require('./controllers/home');
+const { createLoginView } = require('./views/login');
 require('source-map-support').install();
 
 const PORT = 8080;
@@ -12,35 +15,12 @@ const authenticateRequest = request => {
   };
 }
 
-const handleHomePath = (request, response) => {
-  response.statusCode = 200;
-  response.setHeader('Content-Type', 'text/html');
-  response.write('<html>')
-  response.write('<head><title>Example ABAC Site</title></head>');
-  response.write('<body><h1>ABAC Web Site Example</h1>');
-  response.write('<p>Try the following links to see the access response...</p>');
-  response.write('<ul>');
-  response.write('<li><a href="/">Home</a></li>');
-  response.write('<li><a href="/login">Login</a></li>');
-  response.write('<li><a href="/logout">Logout</a></li>');
-  response.write('<li><a href="/secure">Secure</a></li>');
-  response.write('<li><a href="/another">Another page without a policy</a></li>');
-  response.write('</ul>');
-  response.write('<p>For this request, we received the following access response from the policy decision point.</p>');
-  response.write('<pre>' + JSON.stringify(request.accessResponse, null, 2) + '</pre>');
-  response.write('</body><html>');
-  response.end();
-}
-
 const handleLoginPath = (request, response) => {
+  const loginView = createLoginView(request.accessResponse);
   response.statusCode = 200;
   response.setHeader('Content-Type', 'text/html');
-  response.write('<html>')
-  response.write('<head><title>Login - Example ABAC Site</title></head>');
-  response.write('<body><h1>Login</h1>');
-  response.write('<p>For this request, we received the following access response from the policy decision point.</p>');
-  response.write('<pre>' + JSON.stringify(request.accessResponse, null, 2) + '</pre>');
-  response.write('</body><html>');  response.end();
+  response.write(loginView);
+  response.end();
 }
 
 const handleLogoutPath = (request, response) => {
@@ -57,16 +37,16 @@ const handleSecurePath = (request, response) => {
   response.end();
 }
 
-const PATH_HANDLERS = {
-  '/': handleHomePath,
+const CONTROLLERS = {
+  '/': homeController,
   '/login': handleLoginPath,
   '/logout': handleLogoutPath,
   '/secure': handleSecurePath
 }
 
-const handleRequest = (paths) => (request, response) => {
+const handleRequest = (controllers) => (request, response) => {
   const [path, query] = request.url.split('?');
-  let handler = paths[path];
+  const handler = controllers[path];
   request.path = path;
   request.query = query;
   if (handler === undefined) {
@@ -75,57 +55,6 @@ const handleRequest = (paths) => (request, response) => {
     return response.end();
   }
   handler(request, response);
-}
-
-const makeAccessRequest = (method, path, identity, request) => ({
-  subject: {
-    userid: identity.id,
-    name: identity.name,
-    groups: identity.groups
-  },
-  action: {
-    method: method
-  },
-  resource: {
-    path: path
-  },
-  environment: {
-    ip: request.headers['x-forwarded-for'] || request.connection.remoteAddress,
-    timestamp: Date.now(),
-    userAgent: request.headers['user-agent'],
-    dnt: request.headers.dnt
-  }
-});
-
-// the policy execution point creates the access request, passes it to the
-// policy decision point and then handles the access response from the polcy
-// decision point
-const policyExecutionPoint = pdp => (request, response) => {
-  let [path, query] = request.url.split('?');
-  const accessRequest = makeAccessRequest(request.method, path, request.authenticatedUser, request);
-  const accessResponse = pdp(accessRequest);
-  const send403Response = (response, accessResponse, message) => {
-    response.statusCode = 403; // 403 Forbidden
-    response.setHeader('Content-Type', 'text/html');
-    response.write('<html>')
-    response.write('<head><title>Forbidden Error</title></head>');
-    response.write('<body><h1>Forbidden Error</h1>');
-    response.write('<p>' + message + '</p>');
-    response.write('<p>Below is the response we received from the policy decision point.</p>');
-    response.write('<pre>' + JSON.stringify(accessResponse, null, 2) + '</pre>');
-    response.write('</body><html>');
-    response.end();
-  }
-  if (accessResponse.decision === ACCESS_DECISION.NOT_APPLICABLE) {
-    send403Response(response, accessResponse, 'You have not been granted access as your request did not match any of our policies.');
-    return false;
-  }
-  if (accessResponse.decision === ACCESS_DECISION.DENY) {
-    send403Response(response, accessResponse, 'You have not been granted access as your request did not satisfy our policies.');
-    return false;
-  }
-  request.accessResponse = accessResponse;
-  return true;
 }
 
 const listener = (authenticateRequest, pep, handleRequest) => (request, response) => {
@@ -143,14 +72,15 @@ const main = async (paths, port) => {
     // create the full path to the policies folder...
     const policiesFolder = join(__dirname, 'policies');
     const policies = await loadJsonPolicyFiles(policiesFolder);
-    // create the policy decision point which will obtain a policy set and then
-    // give an access response with an allow, deny or not-applicable decision
-    // for a given access request..
-    const pdp = createPolicyDecisionPoint(policies, {
+    const pap = createPolicyAdministrationPointFn(policies, {
       actions: [ ...POLICY_MATCH_FNS.actions ],
       principals: [ ...POLICY_MATCH_FNS.principals ],
       resources: [ ...POLICY_MATCH_FNS.resources ],
     });
+    // create the policy decision point which will obtain a policy set and then
+    // give an access response with an allow, deny or not-applicable decision
+    // for a given access request..
+    const pdp = createPolicyDecisionPointFn(pap);
     // the policy execution point creates the access request, passes it to the
     // policy decision point, get the access response and then return an error
     // to the client or allow the request to continue...
@@ -169,4 +99,4 @@ const main = async (paths, port) => {
 };
 
 // run the app
-main(PATH_HANDLERS, PORT);
+main(CONTROLLERS, PORT);

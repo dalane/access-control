@@ -5,7 +5,7 @@ import { assign as _assign, isEqual as _isEqual, merge as _merge } from 'lodash'
 import { join } from 'path';
 import { promisify } from 'util';
 import { IAccessRequest } from './access-request';
-import { IIsSatisfiedByResult, makeIsSatisfiedByResult } from './policy';
+import { IIsSatisfiedByResult, isSatisfiedByResult } from './policy';
 
 export const assign = (...sources:object[]) => _assign(...sources);
 export const merge = (...sources:object[]) => _merge(...sources);
@@ -25,7 +25,7 @@ export const getDeepValue = (object:object, parts:string[]):any => {
 const statAsync = promisify(stat);
 const globAsync = promisify(glob);
 
-export const findPathsByPattern = (cwd:string) => async (pattern:string):Promise<string[]> => {
+export const findPathsByPattern = async (cwd:string, pattern: string):Promise<string[]> => {
   // call the promisified glob library returning the array of file paths...
   return (await globAsync(pattern, {
     cwd,
@@ -83,9 +83,9 @@ export function assertIsArray<T>(value:T[], message?:string):asserts value is T[
 }
 
 export function isSatisfiedByTrueFn(accessRequest: IAccessRequest): IIsSatisfiedByResult {
-  return makeIsSatisfiedByResult(true);
+  return isSatisfiedByResult(true);
 }
 
 export function isSatisfiedByFalseFn(accessRequest: IAccessRequest): IIsSatisfiedByResult {
-  return makeIsSatisfiedByResult(false);
+  return isSatisfiedByResult(false);
 }

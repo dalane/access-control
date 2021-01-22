@@ -1,27 +1,33 @@
 import { getDeepValue, isEqualObject, assertIsArray, assertIsDefined } from '../helpers';
 import { IAccessRequest } from '../access-request';
-import { ICompileSpecificationsFn, ISpecification, ISpecificationMatchFn, ISpecificationProperties, getAssertionName } from './specification';
+import { CompileSpecificationsFn, ISpecification, SpecificationMatchFn, ISpecificationProperties, getAssertionName } from './specification';
+
+export type ArrayAssertionFn = (specificationMatchFns: SpecificationMatchFn[]) => SpecificationMatchFn;
+
+export interface IArrayAssertions {
+  [key:string]: ArrayAssertionFn;
+}
 
 /*
- * anyOf and allOf are composite rules taking an array of compiled rules.
+ * anyOf and allOf are array assertiong rules taking an array of compiled rules.
  */
 
 /**
- * Creates a composite rule that returns an isSatisfiedBy result if all specifications
+ * Creates an array rule that returns an isSatisfiedBy result if all specifications
  * in the array pass.
- * @param compiledAssertions ICompiledAssertions[]
+ * @param specificationMatchFns ICompiledAssertions[]
  */
-export const allOf = (compiledAssertions:ISpecificationMatchFn[]):ISpecificationMatchFn => {
-  assertIsArray(compiledAssertions, '#allOf requires an array of compiled specifications');
-  return (data:IAccessRequest) => {
+export const allOf: ArrayAssertionFn = (specificationMatchFns: SpecificationMatchFn[]):SpecificationMatchFn => {
+  assertIsArray(specificationMatchFns, '#allOf requires an array of compiled specifications');
+  return (accessRequest: IAccessRequest) => {
     // if there are no rules then we return true by default...
-    if (compiledAssertions.length === 0) {
+    if (specificationMatchFns.length === 0) {
       return true;
     }
     // iterate until we find a fail condition and then stop. no need to continue
     // checking all assertions if at least one fails as all need to pass...
-    for (const isSatisfiedBy of compiledAssertions) {
-      if (isSatisfiedBy(data) === false) {
+    for (const isSatisfiedBy of specificationMatchFns) {
+      if (isSatisfiedBy(accessRequest) === false) {
         return false;
       }
     }
@@ -32,19 +38,19 @@ export const allOf = (compiledAssertions:ISpecificationMatchFn[]):ISpecification
 /**
  * Creates a specification that returns an isSatisfiedBy result if at lease
  * one specification in the array passes.
- * @param compiledAssertion ISpecification[]
+ * @param specificationMatchFns ISpecification[]
  */
-export const anyOf:CompositeAssertionFn = (compiledAssertion:ISpecificationMatchFn[]):ISpecificationMatchFn => {
-  assertIsArray(compiledAssertion, '#anyOf requires an array of compiled specifications');
-  return (data:IAccessRequest) => {
+export const anyOf: ArrayAssertionFn = (specificationMatchFns: SpecificationMatchFn[]):SpecificationMatchFn => {
+  assertIsArray(specificationMatchFns, '#anyOf requires an array of compiled specifications');
+  return (accessRequest: IAccessRequest) => {
     // if there are no rules then we return true by default...
-    if (compiledAssertion.length === 0) {
+    if (specificationMatchFns.length === 0) {
       return true;
     }
     // iterate until we find a pass condition and then stop. no need to continue
     // checking all assertions if at least one passes as only one needs to pass...
-    for (const isSatisfiedBy of compiledAssertion) {
-      if (isSatisfiedBy(data) === true) {
+    for (const isSatisfiedBy of specificationMatchFns) {
+      if (isSatisfiedBy(accessRequest) === true) {
         return true;
       }
     }
@@ -52,37 +58,29 @@ export const anyOf:CompositeAssertionFn = (compiledAssertion:ISpecificationMatch
   };
 };
 
-export type CompositeAssertionFn = (rules: ISpecificationMatchFn[]) => ISpecificationMatchFn;
-
-export interface ICompositeAssertions {
-  [key:string]: CompositeAssertionFn;
-}
-
-export const COMPOSITES: ICompositeAssertions = {
+export const DEFAULT_ARRAY_ASSERTIONS: IArrayAssertions = {
   anyOf,
   allOf
 };
 
-export interface CompileCompositeAssertionsFn {
-  (compileSpecification: ICompileSpecificationsFn): ICompileSpecificationsFn;
-}
+export type CompileArrayAssertionsFn = (compileSpecification: CompileSpecificationsFn) => CompileSpecificationsFn;
 
-export const makeCompileCompositeAssertions = (compositeAssertions: ICompositeAssertions): CompileCompositeAssertionsFn => (compileSpecification: ICompileSpecificationsFn): ICompileSpecificationsFn => (specification: ISpecification) => {
+export const makeCompileArrayAssertions = (arrayAssertions: IArrayAssertions): CompileArrayAssertionsFn => (compileSpecification: CompileSpecificationsFn): CompileSpecificationsFn => (specification: ISpecification) => {
   const assertionName = getAssertionName(specification);
-  assertIsDefined(assertionName, 'An assertion name is required for a composite assertion');
-  const assertionFn = compositeAssertions[assertionName];
+  assertIsDefined(assertionName, 'An assertion name is required for a array assertion');
+  const assertionFn = arrayAssertions[assertionName];
   if (assertionFn === undefined) {
-    // we're going to return undefined if there is no composite function as we
+    // we're going to return undefined if there is no array function as we
     // will leave it to the specification compiler to decide what to do...
     return undefined;
   }
   // specify the type as ISpecification[] as the property type as the interface also
   // indicates this could be just ISpecification...
   const specifications = specification[assertionName] as ISpecification[];
-  assertIsArray(specifications, 'Composite assertions must be an array');
+  assertIsArray(specifications, 'Array assertions must be an array');
   const compiledAssertions = specifications.reduce((compiledAssertions, specification) => {
     // recursively call the compile function as this will compile any assertions
-    // and any deeper nested composite functions in the specification...
+    // and any deeper nested array functions in the specification...
     compiledAssertions.push(compileSpecification(specification));
     return compiledAssertions;
   }, []);
@@ -97,11 +95,9 @@ export const makeCompileCompositeAssertions = (compositeAssertions: ICompositeAs
 //   ASSERTIONS
 // ****************************************************************************
 
-export interface IAssertionFunction {
-  (actual:any, expected?:any):boolean;
-}
+export type AssertionFunction = (actual:any, expected?:any) => boolean;
 
-const countNumberOfFunctionArguments = (fn:Function):number => {
+const countNumberOfFunctionArguments = (fn: Function):number => {
   const MATCH_PARENTHESIS = /\(([^)]+)\)/;
   const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
   const fnText = fn.toString().replace(STRIP_COMMENTS, '');
@@ -121,12 +117,12 @@ const countNumberOfFunctionArguments = (fn:Function):number => {
   return argsString.split(',').length;
 };
 
-export const makeCompileAssertions = (assertions:IAssertions):ICompileSpecificationsFn => (specification:ISpecification):ISpecificationMatchFn => {
+export const makeCompileAssertions = (assertions: IAssertions):CompileSpecificationsFn => (specification:ISpecification):SpecificationMatchFn => {
   const assertionName = getAssertionName(specification);
   assertIsDefined(assertionName, 'An assertion name is required in a specification');
   const assertionFn = assertions[assertionName];
   if (undefined === assertionFn) {
-    // we're going to return undefined if there is no composite function as we
+    // we're going to return undefined if there is no array function as we
     // will leave it to the specification compiler to decide what to do...
     return undefined;
   }
@@ -144,55 +140,55 @@ export const makeCompileAssertions = (assertions:IAssertions):ICompileSpecificat
     if (true === expectedIsAVariable) {
       const result = templateLiteralRegExp.exec(specificationProperties.expected);
       const expectedAttributeNameParts = result[1].split('.');
-      return (accessRequest:IAccessRequest):boolean => assertionFn(getDeepValue(accessRequest, attributeNameParts), getDeepValue(accessRequest, expectedAttributeNameParts));
+      return (accessRequest: IAccessRequest):boolean => assertionFn(getDeepValue(accessRequest, attributeNameParts), getDeepValue(accessRequest, expectedAttributeNameParts));
     } else {
-      return (accessRequest:IAccessRequest):boolean => assertionFn(getDeepValue(accessRequest, attributeNameParts), specificationProperties.expected);
+      return (accessRequest: IAccessRequest):boolean => assertionFn(getDeepValue(accessRequest, attributeNameParts), specificationProperties.expected);
     }
   }
-  return (accessRequest:IAccessRequest):boolean =>  assertionFn(getDeepValue(accessRequest, attributeNameParts));
+  return (accessRequest: IAccessRequest):boolean =>  assertionFn(getDeepValue(accessRequest, attributeNameParts));
 };
 
-export const isEqual:IAssertionFunction = (actual:any, expected:any) => {
+export const isEqual: AssertionFunction = (actual:any, expected:any) => {
   if (typeof actual !== typeof expected) {
     return false;
   }
   return (actual === expected);
 };
-export const isNotEqual:IAssertionFunction = (actual:any, expected:any) => not(isEqual)(actual, expected);
-export const isGreaterThanOrEqual:IAssertionFunction = (actual:any, expected:any) => {
+export const isNotEqual: AssertionFunction = (actual:any, expected:any) => not(isEqual)(actual, expected);
+export const isGreaterThanOrEqual: AssertionFunction = (actual:any, expected:any) => {
   if (typeof actual !== 'number' || typeof expected !== 'number') {
     return false;
   }
   return (actual >= expected);
 };
-export const isGreaterThan:IAssertionFunction = (actual:any, expected:any) => {
+export const isGreaterThan: AssertionFunction = (actual:any, expected:any) => {
   if (typeof actual !== 'number' || typeof expected !== 'number') {
     return false;
   }
   return (actual > expected);
 };
-export const isLessThanOrEqual:IAssertionFunction = (actual:any, expected:any) => (actual <= expected);
-export const isLessThan:IAssertionFunction = (actual:any, expected:any) => (actual < expected);
-export const isIncluded:IAssertionFunction = (actual:any, expected:any|any[]) => (Array.isArray(expected)) ? expected.includes(actual) : false;
-export const isNotIncluded:IAssertionFunction = (actual:any, expected:any[]) => not(isIncluded)(actual, expected);
-export const isNull:IAssertionFunction = (actual:any) => (actual === null);
-export const isNotNull:IAssertionFunction = (actual:any) => not(isNull)(actual);
-export const isTrue:IAssertionFunction = (actual:any) => (actual === true);
-export const isNotTrue:IAssertionFunction = (actual:any) => not(isTrue)(actual);
-export const isPresent:IAssertionFunction = (actual:any) => (actual !== undefined && actual !== null);
-export const isNotPresent:IAssertionFunction = (actual:any) => not(isPresent)(actual);
-export const isMatch:IAssertionFunction = (actual:any, expected:any) => (new RegExp(expected)).test(actual);
-export const isNotMatch:IAssertionFunction = (actual:any, expected:any) => not(isMatch)(actual, expected);
-export const isEquivalent:IAssertionFunction = (actual:object, expected:object) => (typeof actual === typeof expected && typeof actual === "object") ? isEqualObject(actual, expected) : false;
-export const isNotEquivalent:IAssertionFunction = (actual:object, expected:object) => not(isEquivalent)(actual, expected);
+export const isLessThanOrEqual: AssertionFunction = (actual:any, expected:any) => (actual <= expected);
+export const isLessThan: AssertionFunction = (actual:any, expected:any) => (actual < expected);
+export const isIncluded: AssertionFunction = (actual:any, expected:any|any[]) => (Array.isArray(expected)) ? expected.includes(actual) : false;
+export const isNotIncluded: AssertionFunction = (actual:any, expected:any[]) => not(isIncluded)(actual, expected);
+export const isNull: AssertionFunction = (actual:any) => (actual === null);
+export const isNotNull: AssertionFunction = (actual:any) => not(isNull)(actual);
+export const isTrue: AssertionFunction = (actual:any) => (actual === true);
+export const isNotTrue: AssertionFunction = (actual:any) => not(isTrue)(actual);
+export const isPresent: AssertionFunction = (actual:any) => (actual !== undefined && actual !== null);
+export const isNotPresent: AssertionFunction = (actual:any) => not(isPresent)(actual);
+export const isMatch: AssertionFunction = (actual:any, expected:any) => (new RegExp(expected)).test(actual);
+export const isNotMatch: AssertionFunction = (actual:any, expected:any) => not(isMatch)(actual, expected);
+export const isEquivalent: AssertionFunction = (actual:object, expected:object) => (typeof actual === typeof expected && typeof actual === "object") ? isEqualObject(actual, expected) : false;
+export const isNotEquivalent: AssertionFunction = (actual:object, expected:object) => not(isEquivalent)(actual, expected);
 
 const not = (func:(...args:any[]) => boolean) => (...args:any[]) => !func(...args);
 
 export interface IAssertions {
-  [key: string]: IAssertionFunction;
+  [key: string]: AssertionFunction;
 }
 
-export const ASSERTIONS: IAssertions = {
+export const DEFAULT_ASSERTIONS: IAssertions = {
   isEqual,
   isNotEqual,
   isGreaterThanOrEqual,

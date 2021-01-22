@@ -1,25 +1,21 @@
 import { assert, assertIsObject, throwAssertionError } from '../helpers';
 import { IAccessRequest } from '../access-request';
-import { CompileCompositeAssertionsFn } from './assertion';
+import { CompileArrayAssertionsFn } from './assertion';
 
 export interface ISpecification {
   [key: string]: ISpecificationProperties | ISpecification[];
 }
 
-export interface ICompileSpecificationsFn {
-  (specification: ISpecification | ISpecification[]): ISpecificationMatchFn;
-}
+export type CompileSpecificationsFn = (specification: ISpecification | ISpecification[]) => SpecificationMatchFn;
 
 export interface ISpecificationProperties {
   attribute: string;
   expected?: any;
 }
 
-export interface ISpecificationMatchFn {
-  (accessRequest: IAccessRequest): boolean;
-}
+export type SpecificationMatchFn = (accessRequest: IAccessRequest) => boolean;
 
-const alwaysReturnTrueCompiledSpecification: ISpecificationMatchFn = (accessRequest: IAccessRequest) => true;
+const alwaysReturnTrueCompiledSpecification: SpecificationMatchFn = (accessRequest: IAccessRequest) => true;
 
 
 export function getAssertionName(specification: ISpecification):string {
@@ -34,9 +30,9 @@ export function getAssertionName(specification: ISpecification):string {
 }
 
 
-export function makeCompileSpecification (compileCompositeAssertionFn: CompileCompositeAssertionsFn, compileAssertionFn: ICompileSpecificationsFn): ICompileSpecificationsFn {
-  function compileSpecification(specification: ISpecification): ISpecificationMatchFn {
-    // if no specification is provided then we will return the default composite
+export function makeCompileSpecification (compileArrayAssertionFn: CompileArrayAssertionsFn, compileAssertionFn: CompileSpecificationsFn): CompileSpecificationsFn {
+  function compileSpecification(specification: ISpecification): SpecificationMatchFn {
+    // if no specification is provided then we will return the default array
     // rule...
     if (specification === undefined || specification === null) {
       return alwaysReturnTrueCompiledSpecification;
@@ -46,13 +42,13 @@ export function makeCompileSpecification (compileCompositeAssertionFn: CompileCo
     if (undefined === assertionName) {
       return alwaysReturnTrueCompiledSpecification;
     }
-    // pass the specification to compile a composite assertion and if it doesn't
-    // find a matching function it will return undefined. Compilation of composites
+    // pass the specification to compile a array assertion and if it doesn't
+    // find a matching function it will return undefined. Compilation of arrays
     // is recursive so we need to pass this containing function so that nested
-    // composite and single assertions can be parsed
-    const compiledCompositeAssertion = compileCompositeAssertionFn(compileSpecification)(specification);
-    if (undefined !== compiledCompositeAssertion) {
-      return compiledCompositeAssertion;
+    // array and single assertions can be parsed
+    const compiledArrayAssertion = compileArrayAssertionFn(compileSpecification)(specification);
+    if (undefined !== compiledArrayAssertion) {
+      return compiledArrayAssertion;
     }
     // pass the specification to compile an assertion and if it doesn't find a
     // matching function it will return undefined...

@@ -1,6 +1,6 @@
 import { IAccessRequest } from "../access-request";
 import { assertIsString, assert, assertIsDefined, isSatisfiedByTrueFn } from "../helpers";
-import { IIsPolicyMatchFn, makeIsSatisfiedByResult } from ".";
+import { IIsPolicyMatchFn, isSatisfiedByResult } from ".";
 import { PolicySchemeMatchDefinition } from "./parser";
 
 export enum BuiltInActionParserSchemas {
@@ -29,9 +29,9 @@ export function matchHttpActionFn(value: string): IIsPolicyMatchFn {
     return (accessRequest:IAccessRequest) => {
       const requestedAction = accessRequest?.action?.method;
       if (requestedAction === undefined) {
-        return makeIsSatisfiedByResult(false);
+        return isSatisfiedByResult(false);
       }
-      return (policyAction === requestedAction.toUpperCase()) ? makeIsSatisfiedByResult(true) : makeIsSatisfiedByResult(false);
+      return (policyAction === requestedAction.toUpperCase()) ? isSatisfiedByResult(true) : isSatisfiedByResult(false);
     };
   }
 }

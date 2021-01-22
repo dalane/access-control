@@ -1,7 +1,7 @@
 import UrlPattern from 'url-pattern';
 import { IAccessRequest } from '../access-request';
 import { assert, assertIsString, assertIsDefined, isSatisfiedByTrueFn } from '../helpers';
-import { IIsPolicyMatchFn, makeIsSatisfiedByResult } from '.';
+import { IIsPolicyMatchFn, isSatisfiedByResult } from '.';
 import { PolicySchemeMatchDefinition } from './parser';
 
 /*
@@ -23,10 +23,10 @@ export function matchUrlPatternResourceFn(value: string): IIsPolicyMatchFn {
     return (accessRequest:IAccessRequest) => {
       const resourcePath = accessRequest?.resource?.path;
       if (resourcePath === undefined) {
-        return makeIsSatisfiedByResult(false);
+        return isSatisfiedByResult(false);
       }
       const pathMatch = matchFn(resourcePath);
-      return (null !== pathMatch) ? makeIsSatisfiedByResult(true, { ...pathMatch }) : makeIsSatisfiedByResult(false);
+      return (null !== pathMatch) ? isSatisfiedByResult(true, { ...pathMatch }) : isSatisfiedByResult(false);
     };
   }
 }

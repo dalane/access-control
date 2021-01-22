@@ -1,6 +1,6 @@
 import { IAccessRequest } from "../access-request";
 import { assert, assertIsDefined, assertIsString, isSatisfiedByFalseFn, isSatisfiedByTrueFn } from "../helpers";
-import { IIsPolicyMatchFn, IIsSatisfiedByResult, makeIsSatisfiedByResult } from "./index";
+import { IIsPolicyMatchFn, IIsSatisfiedByResult, isSatisfiedByResult } from "./index";
 
 export type CreateIsSatisfiedParseFn = (value:any) => IIsPolicyMatchFn;
 
@@ -40,7 +40,7 @@ export function makePolicySchemeValueParser(parserDefinitions: PolicySchemeMatch
         }
       }
       // not resource value was matched
-      return makeIsSatisfiedByResult(false);
+      return isSatisfiedByResult(false);
     };
   };
 }

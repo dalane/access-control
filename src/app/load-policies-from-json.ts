@@ -7,8 +7,8 @@ import { join } from 'path';
  * ".policy.json"...
  * @param basePath
  */
-export async function loadJsonPolicyFiles(basePath: string): Promise<IPolicy[]> {
-  const policyFilePaths = await findPolicyFiles(basePath);
+export async function loadJsonPolicyFiles(basePath: string, pattern?: string): Promise<IPolicy[]> {
+  const policyFilePaths = await findPolicyFiles(basePath, pattern);
   const policies = await loadFilesFromPaths(policyFilePaths);
   const mergedPolicies = mergeExtendedPolicies(policies);
   return mergedPolicies;
@@ -30,8 +30,8 @@ export function mergeExtendedPolicies(policies: IPolicy[]): IPolicy[] {
   return consolidatedPolicies;
 };
 
-export async function findPolicyFiles(basePath: string): Promise<string[]> {
-  return findPathsByPattern(basePath)('**/*.policy.json');
+export async function findPolicyFiles(basePath: string, pattern: string = '**/*.policy.json'): Promise<string[]> {
+  return findPathsByPattern(basePath, pattern);
 };
 
 export async function loadFilesFromPaths(paths: string[]): Promise<IPolicy[]> {

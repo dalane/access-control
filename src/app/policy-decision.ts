@@ -1,25 +1,26 @@
 import { ICompiledPolicy } from './policy/index';
-import { assertIsBoolean, merge } from './helpers';
+import { merge } from './helpers';
 import { ACCESS_DECISION, IAccessResponse } from './access-response';
 import { IAccessRequest } from './access-request';
 import { POLICY_EFFECT } from './policy/effect';
+import { PolicyAdministrationPointFn } from './policy-administration';
 
 function prepareResponse(decision: ACCESS_DECISION, failedPolicies?: ICompiledPolicy[], messages?: string[]): IAccessResponse {
   return {
     decision: decision,
-    messages: messages,
+    ...!!messages && { messages },
+    ...!!failedPolicies && { failedPolicies },
     // TODO: obligations to be added in version 2 policy...
-    failedPolicies: failedPolicies
   };
 }
 
-export type IPolicyDecisionPointFn = (accessRequest: IAccessRequest) => IAccessResponse;
+export type PolicyDecisionPointFn = (accessRequest: IAccessRequest) => IAccessResponse;
 
 // TODO: obligations in version 2 policies...
 
-export function makePolicyDecisionPoint(findPolicySet:IMatchAccessRequestToPolicy): IPolicyDecisionPointFn {
+export function createPolicyDecisionPointFn(policyAdministrationPointFn: PolicyAdministrationPointFn): PolicyDecisionPointFn {
   return (accessRequest:IAccessRequest):IAccessResponse => {
-    const policySet = findPolicySet(accessRequest);
+    const policySet = policyAdministrationPointFn(accessRequest);
     if (policySet.length === 0) {
       return prepareResponse(ACCESS_DECISION.NOT_APPLICABLE, undefined, [ 'No valid policies found that match the request' ]);
     }
@@ -52,55 +53,5 @@ export function makePolicyDecisionPoint(findPolicySet:IMatchAccessRequestToPolic
     }
     // allow the request
     return prepareResponse(ACCESS_DECISION.ALLOW);
-  };
-}
-
-export interface IMatchedPolicyResult {
-  policy: ICompiledPolicy;
-  params?: {
-    resource?: {
-      [key:string]:any
-    },
-    principal?: {
-      [key:string]:any
-    },
-    action?: {
-      [key:string]:any
-    }
-  };
-}
-
-export type IMatchAccessRequestToPolicy = (accessRequest: IAccessRequest) => IMatchedPolicyResult[];
-export type IPolicySetReducer = (policySet: IMatchedPolicyResult[], compiledPolicy:ICompiledPolicy) => IMatchedPolicyResult[];
-
-export function makeFindPolicySet(compiledPolicies: ICompiledPolicy[]): IMatchAccessRequestToPolicy {
-  return (accessRequest: IAccessRequest): IMatchedPolicyResult[] => {
-    return compiledPolicies.reduce((policySet: IMatchedPolicyResult[], compiledPolicy: ICompiledPolicy) => {
-      // console.log(accessRequest, compiledPolicy, compiledPolicy.isPrincipalSatisfied(accessRequest), compiledPolicy.isActionSatisfied(accessRequest), compiledPolicy.isResourceSatisfied(accessRequest));
-      const principalResult = compiledPolicy.isPrincipalSatisfied(accessRequest);
-      assertIsBoolean(principalResult.result, 'Expected the compiled policy to return a "result" property with a boolean value to "#isPrincipalSatisfied"');
-      if (principalResult.result === false) {
-        return policySet;
-      }
-      const actionResult = compiledPolicy.isActionSatisfied(accessRequest);
-      assertIsBoolean(actionResult.result, 'Expected the compiled policy to return a "result" property with a boolean value to "#isActionSatisfied"');
-      if (actionResult.result === false) {
-        return policySet;
-      }
-      const resourceResult = compiledPolicy.isResourceSatisfied(accessRequest);
-      assertIsBoolean(resourceResult.result, 'Expected the compiled policy to return a "result" property with a boolean value to "#isResourceSatisfied"');
-      if (resourceResult.result === false) {
-        return policySet;
-      }
-      policySet.push({
-        policy: compiledPolicy,
-        params: {
-          resource: resourceResult.params || {},
-          principal: principalResult.params || {},
-          action: actionResult.params || {}
-        }
-      });
-      return policySet;
-    }, []);
   };
 }

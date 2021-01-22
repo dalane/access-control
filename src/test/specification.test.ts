@@ -1,8 +1,7 @@
 import { assert } from 'chai';
 import { IAccessRequest } from '../app/access-request';
-import { ICompiledPolicy } from '../app/policy';
-import { allOf, anyOf, ASSERTIONS, COMPOSITES, CompileCompositeAssertionsFn, makeCompileAssertions, makeCompileCompositeAssertions } from '../app/policy/assertion';
-import { ICompileSpecificationsFn, ISpecification, makeCompileSpecification } from '../app/policy/specification';
+import { allOf, anyOf, DEFAULT_ASSERTIONS, DEFAULT_ARRAY_ASSERTIONS, CompileArrayAssertionsFn, makeCompileAssertions, makeCompileArrayAssertions } from '../app/policy/assertion';
+import { CompileSpecificationsFn, ISpecification, makeCompileSpecification } from '../app/policy/specification';
 import { EmptyAccessRequest } from "./fixtures/test-data";
 
 describe("Compiling a specification", () => {
@@ -25,226 +24,226 @@ describe("Compiling a specification", () => {
         }
       };
       it("returns true when actual and expected are equal and both are boolean", () => {
-        assert.isTrue(ASSERTIONS.isEqual(attribute.boolean, attribute.boolean), "expected boolean false to equal false");
+        assert.isTrue(DEFAULT_ASSERTIONS.isEqual(attribute.boolean, attribute.boolean), "expected boolean false to equal false");
       });
       it("returns true when actual and expected are equal and are both strings", () => {
-        assert.isTrue(ASSERTIONS.isEqual(attribute.string, attribute.string), "expected string 'hello' to equal 'hello'");
+        assert.isTrue(DEFAULT_ASSERTIONS.isEqual(attribute.string, attribute.string), "expected string 'hello' to equal 'hello'");
       });
       it("returns true when actual and expected are equal and are both numbers", () => {
-        assert.isTrue(ASSERTIONS.isEqual(attribute.number, attribute.number), "expected number 10 to equal 10");
+        assert.isTrue(DEFAULT_ASSERTIONS.isEqual(attribute.number, attribute.number), "expected number 10 to equal 10");
       });
       it("returns true when actual and expected are both objects and refer to the same object", () => {
-        assert.isTrue(ASSERTIONS.isEqual(attribute.object, attribute.object), "expected object to equal object with same reference");
+        assert.isTrue(DEFAULT_ASSERTIONS.isEqual(attribute.object, attribute.object), "expected object to equal object with same reference");
       });
       it("returns false when actual and expected are not equal and both are boolean", () => {
-        assert.isFalse(ASSERTIONS.isEqual(attribute.boolean, notExpected.boolean), "expected false not to equal true");
+        assert.isFalse(DEFAULT_ASSERTIONS.isEqual(attribute.boolean, notExpected.boolean), "expected false not to equal true");
       });
       it("returns false when actual and expected are not equal and both are strings", () => {
-        assert.isFalse(ASSERTIONS.isEqual(attribute.string, notExpected.string), "expected 'hello' not to equal 'world'");
+        assert.isFalse(DEFAULT_ASSERTIONS.isEqual(attribute.string, notExpected.string), "expected 'hello' not to equal 'world'");
       });
       it("returns false when actual and expected are not equal and both are numbers", () => {
-        assert.isFalse(ASSERTIONS.isEqual(attribute.number, notExpected.number), "expected number 10 not to equal 5");
+        assert.isFalse(DEFAULT_ASSERTIONS.isEqual(attribute.number, notExpected.number), "expected number 10 not to equal 5");
       });
       it("returns false when actual and expected are both objects and do not have the same reference", () => {
-        assert.isFalse(ASSERTIONS.isEqual(attribute.object, notExpected.object), "expected object not to equal object with differnt reference");
+        assert.isFalse(DEFAULT_ASSERTIONS.isEqual(attribute.object, notExpected.object), "expected object not to equal object with differnt reference");
       });
       it("returns false when actual and expected are equal but one is a boolean and the other is a string of the same value", () => {
-        assert.isFalse(ASSERTIONS.isEqual(attribute.boolean, String(attribute.boolean)), "expected false not to equal string 'false'");
+        assert.isFalse(DEFAULT_ASSERTIONS.isEqual(attribute.boolean, String(attribute.boolean)), "expected false not to equal string 'false'");
       });
       it("returns false when actual and expected are equal but one is a number and the other is a string of the same value", () => {
-        assert.isFalse(ASSERTIONS.isEqual(attribute.number, String(attribute.number)), "attribute as number should not equal string of same number");
+        assert.isFalse(DEFAULT_ASSERTIONS.isEqual(attribute.number, String(attribute.number)), "attribute as number should not equal string of same number");
       });
     });
     describe('#isNotEqual assertion', () => {
       it("returns true when actual and expected do not equal and both are boolean", () => {
-        assert.isTrue(ASSERTIONS.isNotEqual(false, true), "expected false not to equal true");
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotEqual(false, true), "expected false not to equal true");
       });
       it("returns true when actual and expected do not equal and both are strings", () => {
-        assert.isTrue(ASSERTIONS.isNotEqual("hello", "world"), "expected 'hello' not to equal 'world'");
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotEqual("hello", "world"), "expected 'hello' not to equal 'world'");
       });
       it("returns true when actual and expected do not equal and both are numbers", () => {
-        assert.isTrue(ASSERTIONS.isNotEqual(10, 5), "expected number 10 not to equal 5");
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotEqual(10, 5), "expected number 10 not to equal 5");
       });
       it("returns true when actual and expected are both objects but do not refer to the same object", () => {
-        assert.isTrue(ASSERTIONS.isNotEqual({}, {}), "expected object not to equal object with differnt reference");
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotEqual({}, {}), "expected object not to equal object with differnt reference");
       });
       it("returns true when actual and expected are equal but one is boolean and the other is string with boolean value", () => {
-        assert.isTrue(ASSERTIONS.isNotEqual(true, String(true)), "expected false not to equal string 'false'");
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotEqual(true, String(true)), "expected false not to equal string 'false'");
       });
       it("returns true when actual and expected do equal but one is a number and the other is string with number value", () => {
-        assert.isTrue(ASSERTIONS.isNotEqual(10, String(10)), "expected number 10 not to string '10'");
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotEqual(10, String(10)), "expected number 10 not to string '10'");
       });
       it("returns false when actual and expected equal and both are boolean", () => {
-        assert.isFalse(ASSERTIONS.isNotEqual(true, true), "expected boolean false equal to false to return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotEqual(true, true), "expected boolean false equal to false to return false");
       });
       it("returns false when actual and expected equal and both are strings", () => {
-        assert.isFalse(ASSERTIONS.isNotEqual("hello", "hello"), "expected string 'hello' equal to 'hello' to return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotEqual("hello", "hello"), "expected string 'hello' equal to 'hello' to return false");
       });
       it("returns false when actual and expected equal and both are numbers", () => {
-        assert.isFalse(ASSERTIONS.isNotEqual(10, 10), "expected number 10 equal 10 to return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotEqual(10, 10), "expected number 10 equal 10 to return false");
       });
       it("returns false when actual and expected are both objects referring to the same reference ", () => {
         const object = {};
-        assert.isFalse(ASSERTIONS.isNotEqual(object, object), "expected object to equal object with same reference to return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotEqual(object, object), "expected object to equal object with same reference to return false");
       });
     });
     describe('#isGreaterThanOrEqual assertions' , () => {
       it("#isGreaterThanOrEqual returns true when actual is greater than or equal to expected and both are numbers", () => {
-        assert.isTrue(ASSERTIONS.isGreaterThanOrEqual(15, 10), "expected 15 to be greater than or equal to 10");
+        assert.isTrue(DEFAULT_ASSERTIONS.isGreaterThanOrEqual(15, 10), "expected 15 to be greater than or equal to 10");
       });
       it("#isGreaterThanOrEqual returns true when actual is equal to expected and both are numbers", () => {
-        assert.isTrue(ASSERTIONS.isGreaterThanOrEqual(10, 10), "expected 10 to be greater than or equal to 10");
+        assert.isTrue(DEFAULT_ASSERTIONS.isGreaterThanOrEqual(10, 10), "expected 10 to be greater than or equal to 10");
       });
       it("#isGreaterThanOrEqual returns false when actual is less than expected when both are numbers", () => {
-        assert.isFalse(ASSERTIONS.isGreaterThanOrEqual(5, 10), "expected that 5 for actual and expected 10 will return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isGreaterThanOrEqual(5, 10), "expected that 5 for actual and expected 10 will return false");
       });
       it("#isGreaterThanOrEqual returns false when actual is greater than or equal to expected but they are not of the same type", () => {
-        assert.isFalse(ASSERTIONS.isGreaterThanOrEqual("15", 10), "expected that string actual '15' will return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isGreaterThanOrEqual("15", 10), "expected that string actual '15' will return false");
       });
     });
     describe('#isGreaterThan assertion', () => {
       it("#isGreaterThan returns true when actual is greater than expected", () => {
-        assert.isTrue(ASSERTIONS.isGreaterThan(15, 10), "expected 15 to be greater than or equal to 10");
+        assert.isTrue(DEFAULT_ASSERTIONS.isGreaterThan(15, 10), "expected 15 to be greater than or equal to 10");
       });
       it("#isGreaterThan returns false when actual is equal to expected", () => {
-        assert.isFalse(ASSERTIONS.isGreaterThan(10, 10), "expected 10 to be greater than or equal to 10");
+        assert.isFalse(DEFAULT_ASSERTIONS.isGreaterThan(10, 10), "expected 10 to be greater than or equal to 10");
       });
       it("#isGreaterThan returns false when actual is less than expected", () => {
-        assert.isFalse(ASSERTIONS.isGreaterThan(5, 10), "expected that 5 for actual and expected 10 will return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isGreaterThan(5, 10), "expected that 5 for actual and expected 10 will return false");
       });
       it("#isGreaterThan returns false when actual is greater than expected but one is not a number", () => {
-        assert.isFalse(ASSERTIONS.isGreaterThan("15", 10), "expected that string actual '15' will return false");
+        assert.isFalse(DEFAULT_ASSERTIONS.isGreaterThan("15", 10), "expected that string actual '15' will return false");
       });
     });
     describe('isLessThanOrEqual', () => {
       it('returns true if actual is less than to expected', () => {
-        assert.isTrue(ASSERTIONS.isLessThanOrEqual(10, 15));
+        assert.isTrue(DEFAULT_ASSERTIONS.isLessThanOrEqual(10, 15));
       });
       it('returns true if actual is equal to expected', () => {
-        assert.isTrue(ASSERTIONS.isLessThanOrEqual(15, 15));
+        assert.isTrue(DEFAULT_ASSERTIONS.isLessThanOrEqual(15, 15));
       });
       it('returns false if actual is greater than expected', () => {
-        assert.isFalse(ASSERTIONS.isLessThanOrEqual(20, 15));
+        assert.isFalse(DEFAULT_ASSERTIONS.isLessThanOrEqual(20, 15));
       });
     });
     describe('isLessThan', () => {
       it('returns true if actual is less than to expected', () => {
-        assert.isTrue(ASSERTIONS.isLessThan(10, 15));
+        assert.isTrue(DEFAULT_ASSERTIONS.isLessThan(10, 15));
       });
       it('returns false if actual is equal to expected', () => {
-        assert.isFalse(ASSERTIONS.isLessThan(15, 15));
+        assert.isFalse(DEFAULT_ASSERTIONS.isLessThan(15, 15));
       });
       it('returns false if actual is greater than expected', () => {
-        assert.isFalse(ASSERTIONS.isLessThan(20, 15));
+        assert.isFalse(DEFAULT_ASSERTIONS.isLessThan(20, 15));
       });
     });
     describe('isIncluded checks for an actual value is an array or comma separated list of expected values', () => {
       it('returns true if actual is included in an array of expected values', () => {
-        assert.isTrue(ASSERTIONS.isIncluded('test', ['this', 'is', 'a', 'test']));
+        assert.isTrue(DEFAULT_ASSERTIONS.isIncluded('test', ['this', 'is', 'a', 'test']));
       });
       it('returns false if expected is not an array', () => {
-        assert.isFalse(ASSERTIONS.isIncluded('test', 'this, is, a, test'));
+        assert.isFalse(DEFAULT_ASSERTIONS.isIncluded('test', 'this, is, a, test'));
       });
       it('returns false if actual is not in an array of expected values', () => {
-        assert.isFalse(ASSERTIONS.isIncluded('testing', ['this', 'is', 'a', 'test']));
+        assert.isFalse(DEFAULT_ASSERTIONS.isIncluded('testing', ['this', 'is', 'a', 'test']));
       });
     });
     describe('isNotIncluded checks that an actual value is not in an array or comma separated list of expected values', () => {
       it('returns false if actual is included in an array of expected values', () => {
-        assert.isFalse(ASSERTIONS.isNotIncluded('test', ['this', 'is', 'a', 'test']));
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotIncluded('test', ['this', 'is', 'a', 'test']));
       });
       it('returns true if expected is not an array', () => {
-        assert.isTrue(ASSERTIONS.isNotIncluded('test', 'this, is, a, test'));
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotIncluded('test', 'this, is, a, test'));
       });
       it('returns true if actual is not in an array of expected values', () => {
-        assert.isTrue(ASSERTIONS.isNotIncluded('testing', ['this', 'is', 'a', 'test']));
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotIncluded('testing', ['this', 'is', 'a', 'test']));
       });
     });
     describe('isNull checks if a value is null', () => {
       it('returns true if actual is null', () => {
-        assert.isTrue(ASSERTIONS.isNull(null)); // tslint:disable-line
+        assert.isTrue(DEFAULT_ASSERTIONS.isNull(null)); // tslint:disable-line
       });
       it('returns false if actual is not null', () => {
-        assert.isFalse(ASSERTIONS.isNull('null'));
+        assert.isFalse(DEFAULT_ASSERTIONS.isNull('null'));
       });
     });
     describe('isNotNull checks if a value is not null', () => {
       it('returns false if actual is null', () => {
-        assert.isFalse(ASSERTIONS.isNotNull(null)); // tslint:disable-line
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotNull(null)); // tslint:disable-line
       });
       it('returns true if actual is not null', () => {
-        assert.isTrue(ASSERTIONS.isNotNull('null'));
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotNull('null'));
       });
     });
     describe('isTrue checks if a value is true', () => {
       it('returns true if actual is null', () => {
-        assert.isTrue(ASSERTIONS.isTrue(true));
+        assert.isTrue(DEFAULT_ASSERTIONS.isTrue(true));
       });
       it('returns false if actual is not null', () => {
-        assert.isFalse(ASSERTIONS.isTrue('true'));
+        assert.isFalse(DEFAULT_ASSERTIONS.isTrue('true'));
       });
     });
     describe('isNotTrue checks if a value is false', () => {
       it('returns false if actual is null', () => {
-        assert.isFalse(ASSERTIONS.isNotTrue(true));
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotTrue(true));
       });
       it('returns true if actual is not null', () => {
-        assert.isTrue(ASSERTIONS.isNotTrue('true'));
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotTrue('true'));
       });
     });
     describe('isPresent checks if a value exists, i.e. not undefined', () => {
       it('returns true if actual is null', () => {
-        assert.isTrue(ASSERTIONS.isPresent('undefined'));
+        assert.isTrue(DEFAULT_ASSERTIONS.isPresent('undefined'));
       });
       it('returns false if actual is not null', () => {
-        assert.isFalse(ASSERTIONS.isPresent(undefined));
+        assert.isFalse(DEFAULT_ASSERTIONS.isPresent(undefined));
       });
     });
     describe('isNot present checks if a value does not exist, i.e. undefined', () => {
       it('returns false if actual is null', () => {
-        assert.isFalse(ASSERTIONS.isNotPresent('undefined'));
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotPresent('undefined'));
       });
       it('returns true if actual is not null', () => {
-        assert.isTrue(ASSERTIONS.isNotPresent(undefined));
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotPresent(undefined));
       });
     });
     describe('isMatch checks actual against an expected regular expression', () => {
       it('returns true if actual matches the expected regex pattern', () => {
         // this regex matches hexadecimal numbers...
-        assert.isTrue(ASSERTIONS.isMatch('a4b', '^[a-fA-F0-9]+$'));
+        assert.isTrue(DEFAULT_ASSERTIONS.isMatch('a4b', '^[a-fA-F0-9]+$'));
       });
       it('returns false if actual does not match the expected regex pattern', () => {
-        assert.isFalse(ASSERTIONS.isMatch('z4a', '^[a-fA-F0-9]+$'));
+        assert.isFalse(DEFAULT_ASSERTIONS.isMatch('z4a', '^[a-fA-F0-9]+$'));
       });
     });
     describe('isNotMatch check actual does not match a regular expression', () => {
       it('returns true if actual matches the expected regex pattern', () => {
         // this regex matches hexadecimal numbers...
-        assert.isFalse(ASSERTIONS.isNotMatch('a4b', '^[a-fA-F0-9]+$'));
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotMatch('a4b', '^[a-fA-F0-9]+$'));
       });
       it('returns false if actual does not match the expected regex pattern', () => {
-        assert.isTrue(ASSERTIONS.isNotMatch('z4a', '^[a-fA-F0-9]+$'));
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotMatch('z4a', '^[a-fA-F0-9]+$'));
       });
     });
     describe('isEquivalent checks if two objects are equal (by properties, not reference)', () => {
       it('returns true if actual and expected objects have the same properties and values', () => {
-        assert.isTrue(ASSERTIONS.isEquivalent({ test: 'hello', world: '!'}, { test: 'hello', world: '!'}));
+        assert.isTrue(DEFAULT_ASSERTIONS.isEquivalent({ test: 'hello', world: '!'}, { test: 'hello', world: '!'}));
       });
       it('returns false if actual and expected objects have the same properties and values', () => {
-        assert.isFalse(ASSERTIONS.isEquivalent({ test: 'world', hello: '!'}, { test: 'hello', world: '!'}));
+        assert.isFalse(DEFAULT_ASSERTIONS.isEquivalent({ test: 'world', hello: '!'}, { test: 'hello', world: '!'}));
       });
     });
     describe('isNotEquivalent checks if two objects are not equal (by properties, not reference)', () => {
       it('returns false if actual and expected objects have the same properties and values', () => {
-        assert.isFalse(ASSERTIONS.isNotEquivalent({ test: 'hello', world: '!'}, { test: 'hello', world: '!'}));
+        assert.isFalse(DEFAULT_ASSERTIONS.isNotEquivalent({ test: 'hello', world: '!'}, { test: 'hello', world: '!'}));
       });
       it('returns true if actual and expected objects have the same properties and values', () => {
-        assert.isTrue(ASSERTIONS.isNotEquivalent({ test: 'world', hello: '!'}, { test: 'hello', world: '!'}));
+        assert.isTrue(DEFAULT_ASSERTIONS.isNotEquivalent({ test: 'world', hello: '!'}, { test: 'hello', world: '!'}));
       });
     });
   });
 
-  describe('composite assertions', () => {
+  describe('array assertions', () => {
     const fixture = {
       action: {},
       subject: {
@@ -281,25 +280,25 @@ describe("Compiling a specification", () => {
         const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isFalse(sut(mockAccessRequest));
       });
-      it("returns true if there are no rules in anyOf composite rule", () => {
-        assert.isTrue(COMPOSITES.anyOf([])(EmptyAccessRequest), "expected true when no rules are provided");
+      it("returns true if there are no rules in anyOf array rule", () => {
+        assert.isTrue(DEFAULT_ARRAY_ASSERTIONS.anyOf([])(EmptyAccessRequest), "expected true when no rules are provided");
       });
-      it("returns true if any rules in composite anyOf rule return true", () => {
+      it("returns true if any rules in array anyOf rule return true", () => {
         const ageIsEqualTo25 = () => true;
         const tempIsGreaterThanOrEqual18 = () => false;
-        const anyOf = COMPOSITES.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        const anyOf = DEFAULT_ARRAY_ASSERTIONS.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
         assert.isTrue(anyOf(fixture), "both rules return true results in true");
       });
-      it("returns true if both rules in composite anyOf rule return true", () => {
+      it("returns true if both rules in array anyOf rule return true", () => {
         const ageIsEqualTo25 = () => true;
         const tempIsGreaterThanOrEqual18 = () => true;
-        const anyOf = COMPOSITES.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        const anyOf = DEFAULT_ARRAY_ASSERTIONS.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
         assert.isTrue(anyOf(fixture), "both rules return true results in true");
       });
-      it("returns false if all rules in composite anyOf rule return false", () => {
+      it("returns false if all rules in array anyOf rule return false", () => {
         const ageIsEqualTo25 = () => false;
         const tempIsGreaterThanOrEqual18 = () => false;
-        const anyOf = COMPOSITES.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        const anyOf = DEFAULT_ARRAY_ASSERTIONS.anyOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
         assert.isFalse(anyOf(fixture), "both rules return true results in true");
       });
     });
@@ -328,25 +327,25 @@ describe("Compiling a specification", () => {
         const mockAccessRequest = {} as unknown as IAccessRequest;
         assert.isFalse(sut(mockAccessRequest));
       });
-      it("returns true if there are no rules in allOf composite rule", () => {
-        assert.isTrue(COMPOSITES.allOf([])(EmptyAccessRequest), "expected true when no rules are provided");
+      it("returns true if there are no rules in allOf array rule", () => {
+        assert.isTrue(DEFAULT_ARRAY_ASSERTIONS.allOf([])(EmptyAccessRequest), "expected true when no rules are provided");
       });
-      it("returns true if all rules in composite allOf rule return true", () => {
+      it("returns true if all rules in array allOf rule return true", () => {
         const ageIsEqualTo25 = () => true;
         const tempIsGreaterThanOrEqual18 = () => true;
-        const allOf = COMPOSITES.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        const allOf = DEFAULT_ARRAY_ASSERTIONS.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
         assert.isTrue(allOf(fixture), "both rules return true results in true");
       });
-      it("returns false if any one rule in composite allOf rule returns false", () => {
+      it("returns false if any one rule in array allOf rule returns false", () => {
         const ageIsEqualTo25 = () => true;
         const tempIsGreaterThanOrEqual18 = () => false;
-        const allOf = COMPOSITES.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        const allOf = DEFAULT_ARRAY_ASSERTIONS.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
         assert.isFalse(allOf(fixture), "both rules return true results in true");
       });
-      it("returns false if all rules in composite allOf rule returns false", () => {
+      it("returns false if all rules in array allOf rule returns false", () => {
         const ageIsEqualTo25 = () => false;
         const tempIsGreaterThanOrEqual18 = () => false;
-        const allOf = COMPOSITES.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
+        const allOf = DEFAULT_ARRAY_ASSERTIONS.allOf([ ageIsEqualTo25, tempIsGreaterThanOrEqual18 ]);
         assert.isFalse(allOf(fixture), "both rules return true results in true");
       });
     });
@@ -465,92 +464,92 @@ describe("Compiling a specification", () => {
       assert.isTrue(sut() === 20, 'expected that the value provided to the assertion would be 20');
     });
   });
-  describe('Compiling composite assertions', () => {
-    const mockCompileSpecification: ICompileSpecificationsFn = <ICompileSpecificationsFn><unknown>(() => {});
+  describe('Compiling array assertions', () => {
+    const mockCompileSpecification: CompileSpecificationsFn = <CompileSpecificationsFn><unknown>(() => {});
     it('throws an assertion error if there is no assertion in the specification', () => {
-      const composites = {};
+      const arrays = {};
       const specification = {};
-      const itThrows = () => makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
-      assert.throws(itThrows, 'An assertion name is required for a composite assertion');
+      const itThrows = () => makeCompileArrayAssertions(arrays)(mockCompileSpecification)(specification);
+      assert.throws(itThrows, 'An assertion name is required for a array assertion');
     });
-    it('throws an assertion error if the composite assertion value is not an array', () => {
-      const composites = {
-        testCompositeFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
+    it('throws an assertion error if the array assertion value is not an array', () => {
+      const arrays = {
+        testArrayFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
       };
       const specification = {
-        testCompositeFn: {}
+        testArrayFn: {}
       } as unknown as ISpecification;
-      const itThrows = () => makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
-      assert.throws(itThrows, 'Composite assertions must be an array');
+      const itThrows = () => makeCompileArrayAssertions(arrays)(mockCompileSpecification)(specification);
+      assert.throws(itThrows, 'Array assertions must be an array');
     });
-    it('returns undefined if a composite assertion function was not found', () => {
-      const composites = {
-        testCompositeFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
+    it('returns undefined if a array assertion function was not found', () => {
+      const arrays = {
+        testArrayFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
       };
       const specification = {
-        anotherTestFn: [] // this proprty "anotherTestFn" doesn't exist in the composites functions above...
+        anotherTestFn: [] // this proprty "anotherTestFn" doesn't exist in the arrays functions above...
       };
-      const sut = makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
+      const sut = makeCompileArrayAssertions(arrays)(mockCompileSpecification)(specification);
       assert.isUndefined(sut, 'Expected the compiler to return undefined');
     });
-    it('returns a compiled composite assertion', () => {
-      const composites = {
-        testCompositeFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
+    it('returns a compiled array assertion', () => {
+      const arrays = {
+        testArrayFn: (compiledAssertions) => (accessRequest:IAccessRequest) => true
       };
       const mockCompileSpecification = (specification) => {
         return (accessRequest:IAccessRequest) => true;
       };
       const specification = {
-        testCompositeFn: [] // this proprty "anotherTestFn" doesn't exist in the composites functions above...
+        testArrayFn: [] // this proprty "anotherTestFn" doesn't exist in the arrays functions above...
       };
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const sut = makeCompileCompositeAssertions(composites)(mockCompileSpecification)(specification);
-      assert.isTrue(sut(mockAccessRequest), 'Expected the compiled composite function to return true');
+      const sut = makeCompileArrayAssertions(arrays)(mockCompileSpecification)(specification);
+      assert.isTrue(sut(mockAccessRequest), 'Expected the compiled array function to return true');
     });
   });
-  describe("Compiling a specification combining compiling assertions and composites", () => {
+  describe("Compiling a specification combining compiling assertions and arrays", () => {
     it('returns a compiled specification that always returns true if the specification in a policy is not defined', () => {
-      const mockCompileComposite = () => {};
+      const mockCompileArray = () => {};
       const mockCompileAssertion = () => {};
       const specification = undefined as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const sut = makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
+      const sut = makeCompileSpecification(mockCompileArray as unknown as CompileArrayAssertionsFn, mockCompileAssertion as unknown as CompileSpecificationsFn)(specification);
       assert.isFunction(sut, 'expected a function to be returned');
       assert.isTrue(sut(mockAccessRequest), 'expected an undefined specification to return true');
     });
     it('returns a compiled specification that always returns true if the specification in a policy is an empty object', () => {
-      const mockCompileComposite = () => {};
+      const mockCompileArray = () => {};
       const mockCompileAssertion = () => {};
       const specification = {} as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const sut = makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
+      const sut = makeCompileSpecification(mockCompileArray as unknown as CompileArrayAssertionsFn, mockCompileAssertion as unknown as CompileSpecificationsFn)(specification);
       assert.isFunction(sut, 'expected a function to be returned');
       assert.isTrue(sut(mockAccessRequest), 'expected an empty specification to return true');
     });
     it('throws an error if a specification is provided but is not an object', () => {
-      const mockCompileComposite = (compileSpecification:ICompileSpecificationsFn) => () => {};
+      const mockCompileArray = (compileSpecification:CompileSpecificationsFn) => () => {};
       const mockCompileAssertion = () => {};
       const specification = [] as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
+      const itThrows = () => makeCompileSpecification(mockCompileArray as unknown as CompileArrayAssertionsFn, mockCompileAssertion as unknown as CompileSpecificationsFn)(specification);
       assert.throws(itThrows, 'Specification must be an object');
     });
     it('throws an error if an assertion name is not recognised', () => {
-      // if both teh compile composite and compile assertion functions return
+      // if both teh compile array and compile assertion functions return
       // undefined then compile specificaiton will throw an assertion error...
-      const mockCompileComposite = (compileSpecification:ICompileSpecificationsFn) => (specification:ISpecification) => undefined;
+      const mockCompileArray = (compileSpecification:CompileSpecificationsFn) => (specification:ISpecification) => undefined;
       const mockCompileAssertion = (specification:ISpecification) => undefined;
       const specification = {
         test: {} // specify an assertion name to avoid triggering an empty spec error
       } as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
+      const itThrows = () => makeCompileSpecification(mockCompileArray as unknown as CompileArrayAssertionsFn, mockCompileAssertion as unknown as CompileSpecificationsFn)(specification);
       assert.throws(itThrows, 'The assertion "test" does not exist');
     });
     it('throws an error if more than one assertion in a specification object', () => {
-            // if both teh compile composite and compile assertion functions return
+            // if both teh compile array and compile assertion functions return
       // undefined then compile specificaiton will throw an assertion error...
-      const mockCompileComposite = (compileSpecification:ICompileSpecificationsFn) => (specification:ISpecification) => undefined;
+      const mockCompileArray = (compileSpecification:CompileSpecificationsFn) => (specification:ISpecification) => undefined;
       const mockCompileAssertion = (specification:ISpecification) => undefined;
       const specification = {
         isEqual: {
@@ -561,7 +560,7 @@ describe("Compiling a specification", () => {
         }
       } as unknown as ISpecification;
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeCompileSpecification(mockCompileComposite as unknown as CompileCompositeAssertionsFn, mockCompileAssertion as unknown as ICompileSpecificationsFn)(specification);
+      const itThrows = () => makeCompileSpecification(mockCompileArray as unknown as CompileArrayAssertionsFn, mockCompileAssertion as unknown as CompileSpecificationsFn)(specification);
       assert.throws(itThrows, 'Only one assertion per specification is allowed');
     });
     it('a complex compiled specification returns true as expected', () => {
@@ -590,7 +589,7 @@ describe("Compiling a specification", () => {
           }
         ]
       };
-      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES), makeCompileAssertions(ASSERTIONS))(specification);
+      const sut = makeCompileSpecification(makeCompileArrayAssertions(DEFAULT_ARRAY_ASSERTIONS), makeCompileAssertions(DEFAULT_ASSERTIONS))(specification);
       assert.isTrue(sut({
         action: {},
         subject: {
@@ -629,7 +628,7 @@ describe("Compiling a specification", () => {
           }
         ]
       };
-      const sut = makeCompileSpecification(makeCompileCompositeAssertions(COMPOSITES), makeCompileAssertions(ASSERTIONS))(specification);
+      const sut = makeCompileSpecification(makeCompileArrayAssertions(DEFAULT_ARRAY_ASSERTIONS), makeCompileAssertions(DEFAULT_ASSERTIONS))(specification);
       assert.isFalse(sut({
         action: {},
         subject: {

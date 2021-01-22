@@ -1,6 +1,6 @@
 import { IAccessRequest } from "../access-request";
 import { assertIsDefined, assertIsString, isSatisfiedByTrueFn, } from "../helpers";
-import { IIsPolicyMatchFn, makeIsSatisfiedByResult } from "./index";
+import { IIsPolicyMatchFn, isSatisfiedByResult } from "./index";
 import { PolicySchemeMatchDefinition } from "./parser";
 
 /*
@@ -17,12 +17,12 @@ export function matchUserIdPrincipalFn(value: string): IIsPolicyMatchFn {
   if (value === '*') {
     return isSatisfiedByTrueFn;
   } else {
-    return (accessRequest:IAccessRequest) => {
+    return (accessRequest: IAccessRequest) => {
       const accessReqUserId = accessRequest?.subject?.userid;
       if (accessReqUserId === undefined) {
-        return makeIsSatisfiedByResult(false);
+        return isSatisfiedByResult(false);
       }
-      return (value === accessReqUserId) ? makeIsSatisfiedByResult(true) : makeIsSatisfiedByResult(false);
+      return (value === accessReqUserId) ? isSatisfiedByResult(true) : isSatisfiedByResult(false);
     };
   }
 }

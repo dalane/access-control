@@ -3,7 +3,8 @@ import { CompiledAllowPolicy, CompiledDenyPolicy } from './fixtures/test-data';
 import { merge, isEqualObject } from '../app/helpers';
 import { ICompiledPolicy } from '../app/policy';
 import { IAccessRequest } from '../app/access-request';
-import { IMatchAccessRequestToPolicy, IMatchedPolicyResult, makeFindPolicySet, makePolicyDecisionPoint } from '../app/policy-decision';
+import { createPolicyDecisionPointFn } from '../app/policy-decision';
+import { PolicyAdministrationPointFn, IMatchedPolicyResult, createPolicyFilterFn } from '../app/policy-administration';
 import { ACCESS_DECISION } from '../app/access-response';
 import { POLICY_EFFECT } from '../app/policy/effect';
 
@@ -20,7 +21,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeFindPolicySet(compiledPolicies)(mockAccessRequest);
+      const itThrows = () => createPolicyFilterFn(compiledPolicies)(mockAccessRequest);
       assert.throws(itThrows, 'Expected the compiled policy to return a "result" property with a boolean value to "#isPrincipalSatisfied"');
     });
     it('throws an error if the policy\'s #isActionSatisfied is not correctly formatted', () => {
@@ -34,7 +35,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeFindPolicySet(compiledPolicies)(mockAccessRequest);
+      const itThrows = () => createPolicyFilterFn(compiledPolicies)(mockAccessRequest);
       assert.throws(itThrows, 'Expected the compiled policy to return a "result" property with a boolean value to "#isActionSatisfied"');
     });
     it('throws an error if the policy\'s #isResourceSatisfied is not correctly formatted', () => {
@@ -48,7 +49,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const itThrows = () => makeFindPolicySet(compiledPolicies)(mockAccessRequest);
+      const itThrows = () => createPolicyFilterFn(compiledPolicies)(mockAccessRequest);
       assert.throws(itThrows, 'Expected the compiled policy to return a "result" property with a boolean value to "#isResourceSatisfied"');
     });
     it('returns a set of policies that match the access request on resource, principal and action', () => {
@@ -72,7 +73,7 @@ describe('Policy Decision Point', () => {
       // we can provide an empty access request as the mock functions will
       // return true / false without needing the access request.
       const mockAccessRequest = {} as unknown as IAccessRequest;
-      const sut = makeFindPolicySet(compiledPolicies)(mockAccessRequest);
+      const sut = createPolicyFilterFn(compiledPolicies)(mockAccessRequest);
       assert.isArray(sut, 'Expected an array to be returned');
       assert.equal(sut.length, 1, 'Expected only one record to be returned');
       assert.equal(sut[0].policy.name, CompiledAllowPolicy.name, 'Expected the policy name to match the fixture');
@@ -84,7 +85,7 @@ describe('Policy Decision Point', () => {
       const mockAccessRequest = {} as unknown as IAccessRequest;
       // the mock should return an empty array. This will result in a "ACCESS_DECISION.NOT_APPLICABLE"...
       const mockFindPoliciesMatchingAccessRequest = (accessRequest:IAccessRequest) => [];
-      const sut = makePolicyDecisionPoint(mockFindPoliciesMatchingAccessRequest)(mockAccessRequest);
+      const sut = createPolicyDecisionPointFn(mockFindPoliciesMatchingAccessRequest)(mockAccessRequest);
       assert.equal(sut.decision, ACCESS_DECISION.NOT_APPLICABLE, 'expected a deny decision');
       assert.equal(sut.messages.length, 1, 'Expected one message to be returned');
       assert.equal(sut.messages[0], 'No valid policies found that match the request', 'expected a message that no valid policies were found');
@@ -101,7 +102,7 @@ describe('Policy Decision Point', () => {
           params: {}
         }
       ];
-      const sut = makePolicyDecisionPoint(mockFindPolicySet)(mockAccessRequest);
+      const sut = createPolicyDecisionPointFn(mockFindPolicySet)(mockAccessRequest);
       assert.equal(sut.decision, ACCESS_DECISION.DENY, 'expected a deny decision');
       assert.equal(sut.messages.length, 1, 'Expected one message to be returned');
     });
@@ -119,7 +120,7 @@ describe('Policy Decision Point', () => {
       // we have to return at least one record with #findPoliciesMatchingAccessRequest to avoid
       // a NOT_APPLICABLE access response...
       const mockFindPoliciesMatchingAccessRequest = (accessRequest:IAccessRequest) => fixture;
-      const sut = makePolicyDecisionPoint(mockFindPoliciesMatchingAccessRequest)(mockAccessRequest);
+      const sut = createPolicyDecisionPointFn(mockFindPoliciesMatchingAccessRequest)(mockAccessRequest);
       assert.equal(sut.decision, ACCESS_DECISION.ALLOW, 'expected an allow decision');
       assert.isUndefined(sut.messages, 'Expected no messages to be returned');
     });
@@ -135,7 +136,7 @@ describe('Policy Decision Point', () => {
           params: {}
         }
       ];
-      const sut = makePolicyDecisionPoint(mockFindPolicySet)(mockAccessRequest);
+      const sut = createPolicyDecisionPointFn(mockFindPolicySet)(mockAccessRequest);
       assert.equal(sut.decision, ACCESS_DECISION.DENY, 'expected a deny decision');
       assert.equal(sut.messages.length, 1, 'Expected one message to be returned');
     });
@@ -152,7 +153,7 @@ describe('Policy Decision Point', () => {
       // we have to return at least one record with #findPoliciesMatchingAccessRequest to avoid
       // a NOT_APPLICABLE access response...
       const mockFindPoliciesMatchingAccessRequest = (accessRequest:IAccessRequest) => fixture;
-      const sut = makePolicyDecisionPoint(mockFindPoliciesMatchingAccessRequest)(mockAccessRequest);
+      const sut = createPolicyDecisionPointFn(mockFindPoliciesMatchingAccessRequest)(mockAccessRequest);
       assert.equal(sut.decision, ACCESS_DECISION.ALLOW, 'expected an allow decision');
       assert.isUndefined(sut.messages, 'Expected no messages to be returned');
     });
@@ -162,7 +163,7 @@ describe('Policy Decision Point', () => {
        // result of an object comparison of the access request from the PDP versus the expected access request
       let isExpectedPolicy2AccessRequestSpy:boolean = false;
       // the mockFindPolicySet returns an array of policies that "match" the access request...
-      const mockFindPolicySet: IMatchAccessRequestToPolicy = <IMatchAccessRequestToPolicy><unknown>((accessRequest: IAccessRequest) => [
+      const mockFindPolicySet: PolicyAdministrationPointFn = <PolicyAdministrationPointFn><unknown>((accessRequest: IAccessRequest) => [
         {
           // policy 1 access request should have params from the matched policy params only
           policy: {
@@ -258,7 +259,7 @@ describe('Policy Decision Point', () => {
         action: {},
         resource: {},
       };
-      makePolicyDecisionPoint(mockFindPolicySet)(mockAccessRequest);
+      createPolicyDecisionPointFn(mockFindPolicySet)(mockAccessRequest);
       // assert.isTrue(isExpectedPolicy1AccessRequestSpy, 'Expected the policy 1 params to be found in policy 1 matched access request');
       assert.isTrue(isExpectedPolicy2AccessRequestSpy, 'Expected the policy 2 params to be found in policy 2 isSpecificationSatisfied access request');
     });

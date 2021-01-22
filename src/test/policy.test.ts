@@ -4,7 +4,7 @@ import { isSatisfiedByTrueFn, merge } from '../app/helpers';
 import { CreateIsSatisfiedParseFn, makePolicySchemeValueParser } from '../app/policy/parser';
 import { IAccessRequest } from '../app/access-request';
 import { IIsPolicyMatchFn, IIsSatisfiedByResult, IPolicy, makeCompilePolicy } from '../app/policy';
-import { ICompileSpecificationsFn, ISpecificationMatchFn } from '../app/policy/specification';
+import { CompileSpecificationsFn, SpecificationMatchFn } from '../app/policy/specification';
 
 describe('#makeParsePolicyPrincipalValue returns a function that matches the principal of a policy to an access request', () => {
   it('returns an IIsSatisfiedByFn that returns false if the policy does not contain a principal', () => {
@@ -55,7 +55,7 @@ describe('compiling a policy', () => {
   const _compilePrincipal = (result?:IIsSatisfiedByResult): CreateIsSatisfiedParseFn => (value:any):IIsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
   const _compileAction = (result?:IIsSatisfiedByResult): CreateIsSatisfiedParseFn => (value:any):IIsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
   const _compileResource = (result?:IIsSatisfiedByResult): CreateIsSatisfiedParseFn => (value:any):IIsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
-  const _compileSpecification = (result?:boolean):ICompileSpecificationsFn => (value:any):ISpecificationMatchFn => (accessRequest:IAccessRequest):boolean => result;
+  const _compileSpecification = (result?:boolean):CompileSpecificationsFn => (value:any):SpecificationMatchFn => (accessRequest:IAccessRequest):boolean => result;
   it('throws an error if policy is undefined', () => {
     const mockCompilePrincipal = _compilePrincipal();
     const mockCompileAction = _compileAction();
