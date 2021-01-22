@@ -1,3 +1,18 @@
+# Access Control Documentation
+
+This document provides you with the details to get started using
+```@dalane/access-control```.
+
+It covers how to:
+
+- structure policies
+- use the Policy Administration Point
+- create filter functions for the PAP to generate Policy Sets
+- set up the the Policy Decision Point
+- develop an Access Request
+- implement a Policy Execution Point and handle an Access Response
+- creat custome assertions to use in policy specifications
+
 ## Policies
 
 Policies contain the access rules for determining if a user has access to a resource.
@@ -262,8 +277,3 @@ function createPolicyExecutionPoint(pdp: PolicyDecisionPointFn) {
 
 See the [Policy Execution Point documentation](https://github.com/dalane/access-control/tree/master/readme/policy-execution-point.md)
 for more information.
-
-## Policy Information Points
-
-This library doesn't implement PIPs. Each Access Request needs to include the
-attributes that would be required for each policy decision.

@@ -72,7 +72,7 @@ This library is under active development and will continue to evolve until versi
 1.0.0 is published. Any types, interface and functions may
 change without any deprecation warnings.
 
-A goal is to implement Obligations.
+A goal is to implement Obligations and Policy Information Points.
 
 Suggestions, bug reports and pull requests to fix bugs or implement improvements
 are welcome.
