@@ -20,7 +20,7 @@ if the filter function has matched the value in the Access Request.
 The example below shows how to create a filter function.
 
 ```typescript
-import { IAccessRequest, isSatisfiedByResult, IIsSatisfiedByResult } from '@dalane/access-control';
+import { IAccessRequest, isSatisfiedByResult, IIsSatisfiedByResult, PolicyFilterFn } from '@dalane/access-control';
 
 const filterOperationIdFn: PolicyFilterFn = (pattern: string): IsPolicyMatchFn => {
 	return (accessRequest: IAccessRequest): IIsSatisfiedByResult => {
