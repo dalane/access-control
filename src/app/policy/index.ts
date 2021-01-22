@@ -1,7 +1,7 @@
 import { IAccessRequest } from "../access-request";
 import { assert, assertIsDefined, assertIsObject, } from '../helpers';
 import { CompileSpecificationsFn, SpecificationMatchFn, ISpecification, } from "./specification";
-import { CreateIsSatisfiedParseFn, } from "./parser";
+import { CreatePolicyFilterFn, } from "./parser";
 import { getPolicyEffect, POLICY_EFFECT } from "./effect";
 
 
@@ -13,9 +13,9 @@ export interface IIsSatisfiedByResult {
 	message?:string;
 }
 
-export type IIsPolicyMatchFn = (accessRequest:IAccessRequest) => IIsSatisfiedByResult;
+export type IsPolicyMatchFn = (accessRequest: IAccessRequest) => IIsSatisfiedByResult;
 
-export const isSatisfiedByResult = (result:boolean, params?:object, message?:string):IIsSatisfiedByResult => ({
+export const isSatisfiedByResult = (result:boolean, params?:object, message?:string): IIsSatisfiedByResult => ({
 	result,
 	...{ params },
 	...{ message }
@@ -41,35 +41,35 @@ export interface IPolicy {
 }
 
 export interface ICompiledPolicy {
-	version:number;
-	extends?:string;
-	id?:string;
-	path?:string;
-	name?:string;
-	description?:string;
-	effect:POLICY_EFFECT;
-	isPrincipalSatisfied:IIsPolicyMatchFn;
-	isActionSatisfied:IIsPolicyMatchFn;
-	isResourceSatisfied:IIsPolicyMatchFn;
-	isSpecificationSatisfied:SpecificationMatchFn;
-	principal:any;
-	action:any;
-	resource:any;
-	specification:ISpecification|ISpecification[];
+	version: number;
+	extends?: string;
+	id?: string;
+	path?: string;
+	name?: string;
+	description?: string;
+	effect: POLICY_EFFECT;
+	isPrincipalSatisfied: IsPolicyMatchFn;
+	isActionSatisfied: IsPolicyMatchFn;
+	isResourceSatisfied: IsPolicyMatchFn;
+	isSpecificationSatisfied: SpecificationMatchFn;
+	principal: any;
+	action: any;
+	resource: any;
+	specification: ISpecification | ISpecification[];
 	// TODO: add obligations
 }
 
 export type ICompilePolicy = (
-	compileAction: CreateIsSatisfiedParseFn,
-	compileResource: CreateIsSatisfiedParseFn,
-	compilePrincipal: CreateIsSatisfiedParseFn,
+	compileAction: CreatePolicyFilterFn,
+	compileResource: CreatePolicyFilterFn,
+	compilePrincipal: CreatePolicyFilterFn,
 	compileSpecification: CompileSpecificationsFn
 ) => (policy: IPolicy) => ICompiledPolicy;
 
 export const makeCompilePolicy: ICompilePolicy = (
-	compileActionFn: CreateIsSatisfiedParseFn,
-	compileResourceFn: CreateIsSatisfiedParseFn,
-	compilePrincipalFn: CreateIsSatisfiedParseFn,
+	compileActionFn: CreatePolicyFilterFn,
+	compileResourceFn: CreatePolicyFilterFn,
+	compilePrincipalFn: CreatePolicyFilterFn,
 	compileSpecificationFn: CompileSpecificationsFn
 	) => (policy: IPolicy): ICompiledPolicy => {
 		assertIsDefined(policy, 'The policy is undefined');

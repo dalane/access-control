@@ -1,8 +1,8 @@
 import UrlPattern from 'url-pattern';
 import { IAccessRequest } from '../access-request';
 import { assert, assertIsString, assertIsDefined, isSatisfiedByTrueFn } from '../helpers';
-import { IIsPolicyMatchFn, isSatisfiedByResult } from '.';
-import { PolicySchemeMatchDefinition } from './parser';
+import { IsPolicyMatchFn, isSatisfiedByResult } from '.';
+import { IPolicyFilterDefinitions } from './parser';
 
 /*
   BUILT-IN RESOURCE PARSERS
@@ -12,7 +12,7 @@ export enum BuiltInResourceParserSchemes {
   PATH = 'path',
 }
 
-export function matchUrlPatternResourceFn(value: string): IIsPolicyMatchFn {
+export function matchUrlPatternResourceFn(value: string): IsPolicyMatchFn {
   assertIsDefined(value, 'A value for the resource selector is required.');
   assertIsString(value, 'The value for the resource must be a string');
   assert(value.length !== 0, 'The value for the resource is an empty string')
@@ -41,9 +41,6 @@ function createUrlPatternMatcher(urlPatternStr: string): (url:string) => any {
   return (url: string) => pattern.match(url);
 }
 
-export const defaultResourcePolicyMatchers: PolicySchemeMatchDefinition[] = [
-  {
-    scheme: BuiltInResourceParserSchemes.PATH,
-    matchFn: matchUrlPatternResourceFn
-  }
-];
+export const defaultResourcePolicyMatchers: IPolicyFilterDefinitions = {
+  [BuiltInResourceParserSchemes.PATH]: matchUrlPatternResourceFn
+};

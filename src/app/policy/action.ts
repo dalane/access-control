@@ -1,7 +1,7 @@
 import { IAccessRequest } from "../access-request";
 import { assertIsString, assert, assertIsDefined, isSatisfiedByTrueFn } from "../helpers";
-import { IIsPolicyMatchFn, isSatisfiedByResult } from ".";
-import { PolicySchemeMatchDefinition } from "./parser";
+import { IsPolicyMatchFn, isSatisfiedByResult } from ".";
+import { IPolicyFilterDefinitions } from "./parser";
 
 export enum BuiltInActionParserSchemas {
   HTTP_METHOD = 'http',
@@ -9,14 +9,11 @@ export enum BuiltInActionParserSchemas {
 
 const supportedHttpVerbs = [ 'GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS' ];
 
-export const defaultActionPolicyMatchers: PolicySchemeMatchDefinition[] = [
-  {
-    scheme: BuiltInActionParserSchemas.HTTP_METHOD,
-    matchFn: matchHttpActionFn,
-  },
-];
+export const defaultActionPolicyMatchers: IPolicyFilterDefinitions = {
+  [BuiltInActionParserSchemas.HTTP_METHOD]: matchHttpActionFn,
+}
 
-export function matchHttpActionFn(value: string): IIsPolicyMatchFn {
+export function matchHttpActionFn(value: string): IsPolicyMatchFn {
   assertIsDefined(value, 'A value for the action selector is required.');
   assertIsString(value, 'The value for the action must be a string');
   const trimmed = value.trim();

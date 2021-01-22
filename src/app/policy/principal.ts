@@ -1,7 +1,7 @@
 import { IAccessRequest } from "../access-request";
 import { assertIsDefined, assertIsString, isSatisfiedByTrueFn, } from "../helpers";
-import { IIsPolicyMatchFn, isSatisfiedByResult } from "./index";
-import { PolicySchemeMatchDefinition } from "./parser";
+import { IsPolicyMatchFn, isSatisfiedByResult } from "./index";
+import { IPolicyFilterDefinitions } from "./parser";
 
 /*
   BUILT-IN PRINCIPAL PARSERS
@@ -11,7 +11,7 @@ export enum BuiltInPrincipalParserSchemes {
   USERID = 'userid',
 }
 
-export function matchUserIdPrincipalFn(value: string): IIsPolicyMatchFn {
+export function matchUserIdPrincipalFn(value: string): IsPolicyMatchFn {
   assertIsDefined(value, 'A value for the principal policy is required.');
   assertIsString(value, 'The value for the principal must be a string');
   if (value === '*') {
@@ -27,9 +27,6 @@ export function matchUserIdPrincipalFn(value: string): IIsPolicyMatchFn {
   }
 }
 
-export const defaultPrincipalPolicyMatchers: PolicySchemeMatchDefinition[] = [
-  {
-    scheme: BuiltInPrincipalParserSchemes.USERID,
-    matchFn: matchUserIdPrincipalFn,
-  }
-];
+export const defaultPrincipalPolicyMatchers: IPolicyFilterDefinitions = {
+  [BuiltInPrincipalParserSchemes.USERID]: matchUserIdPrincipalFn,
+};

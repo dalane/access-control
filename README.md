@@ -30,17 +30,35 @@ The components of an Attribute Based Access Control System are:
 
 | Component              | Description
 |---                     |---
-| Policies               | These define the rules for determining access to the application and resources.
+| Policies               | These define the attributes and rules for determining access to the application and resources.
 | Policy Administration Point (PAP) | The PAP is where policies are managed.
-| Policy Decision Point (PDP)  | The PDP takes an Access Request, requests policies from the PAP that match the Access Request, validates each returned policy against the Access Request, and then returns an Access Response with the PDP decision.
-| Access Request         | This contains the attributes to be validated against the policies by the PDP.. These attributes could include details on the user making the request, the resource being accessed and details on the action to be applied to the resource.
-| Access Response        | The Access Response is returned by the Policy Decision Point and contains the decision made by the PDP. It will include an Access Decision indicating that the request is allowed or denied. It may also indicate a not applicable decision indicating that no matching policies were found.
+| Policy Decision Point (PDP)  | The PDP takes an Access Request, requests the PAP to find and return policies that match the Access Request, validates each returned policy against the Access Request, and then returns an Access Response with an access decision.
+| Access Request         | This contains the attributes to be validated against policies by the PDP. These attributes could include details on the user making the request, the resource being accessed and details on the action to be applied to the resource.
+| Access Response        | The Access Response is returned by the Policy Decision Point and contains the decision made by the PDP. It will include an Access Decision indicating that the request is allowed or denied. It may also return a not applicable decision indicating that no matching policies were found.
 | Policy Execution Point (PEP) | The PEP is responsible for creating the Access Request, passing it to the PDP and handling the Access Response.
-| Policy Information Point (PIP) | PIPs are used by the PDP to populate any attributes required by the policy rules that are missing from an Access Request (this library doesn't implement PIPs).
+| Policy Information Point (PIP) | PIPs are used by the PDP to populate any attributes required by the policy rules that are missing from an Access Request.
 
 ## How this libary implements ABAC
 
-### Policies
+This library simplifies a lot of an Attribute Based Access Control system however
+there are still a lot of components, types and interfaces to make it all work
+together. For example, the Policy Administration Point only retrieves policies
+for the Policy Decision Point, there is no management.
+
+The style of policy documents is similar to the AWS policy files instead of
+the XAMCL format (using XML) referenced in the Wikipedia article. They are easier
+to read and understand, and don't have all the extra overhead of an XML document.
+
+There is no implementation for Policy Information Points at this time. Each
+Access Request needs to contain all of the information that would be needed
+to validate the request against the relevant policies.
+
+### Examples
+
+A small demonstration HTTP web server is available in the [examples](https://github.com/dalane/access-control/tree/master/examples/web) folder. It can be run in the
+terminal using ```npm run example```
+
+## Policies
 
 Policies contain the access rules for determining if a user has access to a resource.
 They determine which attributes in the Access Request will result in an ```Allow```
@@ -94,10 +112,6 @@ is below.
 }
 ```
 
-To keep things simple, this style is similar to the AWS policy files instead of
-the XAMCL format (using XML) referenced in the Wikipedia article. They are easier
-to read and understand and don't have all the extra work of an XML document.
-
 There is an exported helper function ```loadJsonPolicyFiles``` for loading and
 parsing these json files. By default it searches for files with the extension ```.policy.json```.
 
@@ -112,7 +126,7 @@ For detailed information on how to write policies for this library, see the
 [policy documentation](https://github.com/dalane/access-control/tree/master/readme/policies.md).
 
 
-### Policy Administration Point
+## Policy Administration Point
 
 The Policy Administration Point is where policies are added, compiled and matched
 to Access Requests. It is required by the Policy Decision Point to filter policies
@@ -131,10 +145,10 @@ type PolicyAdministrationPointFn = (accessRequest: IAccessRequest) => PolicySet;
 ```
 
 The Policy Administration Point function matches a principal, resource and/or
-action to an Access Request returning a ```PolicySet``` of matching policies. The
-matching of principal, resource and/or action requires the matching functions to
-be written by the developer and passed to the ```createPolicyAdministrationPointFn```
-through the ```PolicyDefinitions``` object.
+action to an Access Request returning a ```PolicySet``` of filtered policies. This
+filtering requires filtering functions to be written by the developer and passed
+to the ```createPolicyAdministrationPointFn``` through the ```PolicyDefinitions```
+object.
 
 ```typescript
 import { createPolicyAdministrationPointFn, PolicyAdministrationPointFn, PolicyDefinitions } from '@dalane/access-control';
@@ -150,7 +164,7 @@ const definitions: PolicyDefinitions = {
 const pap: PolicyAdministrationPointFn = createPolicyAdministrationPointFn(policies, definitions);
 ```
 
-For more information on how to write the policy matching functions see the [filter functions documentation](https://github.com/dalane/access-control/tree/master/readme/filter-functions.md).
+For more information on how to write the policy filtering functions see the [filter functions documentation](https://github.com/dalane/access-control/tree/master/readme/filter-functions.md).
 
 As the Policy Administration Point compiles the policies, custom assertions can
 also be added through the ```PolicyDefinitions``` object.
@@ -169,7 +183,7 @@ const definitions: PolicyDefinitions = {
 
 For more information on how to write custom assertions see the [assertions documentation](https://github.com/dalane/access-control/tree/master/readme/assertions.md).
 
-### Policy Decision Point
+## Policy Decision Point
 
 The policy decision point is where policies are matched to requests to access a
 resource. The request to access a resource is defined using an access request. The
@@ -192,7 +206,7 @@ const accessResponse: IAccessResponse = pdp(accessRequest);
 
 ```
 
-### Access Requests
+## Access Requests
 
 The Policy Decision Point takes an Access Request and uses it to determine what
 the Access Response will be.
@@ -235,7 +249,7 @@ const accessResponse: IAccessResponse = pdp(accessRequest);
 
 See the [Access Request documentation](https://github.com/dalane/access-control/tree/master/readme/access-request.md) for more information on implementing an Access Request.
 
-### Acess Responses
+## Acess Responses
 
 The Access Response is returned from the Policy Decision Point when it is called
 with an Access Request. It indicates if the decision for access is allowed or denied.
@@ -270,7 +284,7 @@ determine how to respond to ```ACCESS_DECISION.DENY``` and how to handle an
 Typically, this would be handled in a "Policy Execution Point" which encapsulates
 the creation of access requests and handles the access response.
 
-### Policy Execution Point
+## Policy Execution Point
 
 A Policy Execution Point (PEP) is where the access request is created, calls
 the Policy Decision Point with the Access Request and handles the Access Response.
@@ -309,7 +323,7 @@ function createPolicyExecutionPoint(pdp: PolicyDecisionPointFn) {
 See the [Policy Execution Point documentation](https://github.com/dalane/access-control/tree/master/readme/policy-execution-point.md)
 for more information.
 
-### Policy Information Points
+## Policy Information Points
 
 This library doesn't implement PIPs. Each Access Request needs to include the
 attributes that would be required for each policy decision.

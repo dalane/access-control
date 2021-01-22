@@ -2,14 +2,14 @@ import { ICompiledPolicy } from "./policy";
 import { IAccessRequest, IPolicy } from ".";
 import { assertIsArray, assertIsBoolean } from "./helpers";
 import { CompileArrayAssertionsFn, DEFAULT_ARRAY_ASSERTIONS, DEFAULT_ASSERTIONS, IArrayAssertions, IAssertions, makeCompileArrayAssertions, makeCompileAssertions } from "./policy/assertion";
-import { CreateIsSatisfiedParseFn, makePolicySchemeValueParser, PolicySchemeMatchDefinition } from "./policy/parser";
+import { CreatePolicyFilterFn, createPolicyFilterValueParser, IPolicyFilterDefinitions } from "./policy/parser";
 import { CompileSpecificationsFn, makeCompileSpecification } from "./policy/specification";
 import { makeCompilePolicy } from './policy';
 
 export interface PolicyDefinitions {
-	actions: PolicySchemeMatchDefinition[];
-	principals: PolicySchemeMatchDefinition[];
-	resources: PolicySchemeMatchDefinition[];
+	actions: IPolicyFilterDefinitions;
+	principals: IPolicyFilterDefinitions;
+	resources: IPolicyFilterDefinitions;
 	specification?: {
 		arrays?: IArrayAssertions;
 		assertions?: IAssertions;
@@ -44,9 +44,9 @@ export function createPolicyAdministrationPointFn(policies: IPolicy[], definitio
 	const arrayAssertions: IArrayAssertions = { ...DEFAULT_ARRAY_ASSERTIONS, ...!!definitions?.specification?.arrays && { ...definitions.specification.arrays } };
 	const assertions: IAssertions = { ...DEFAULT_ASSERTIONS, ...!!definitions?.specification?.assertions && { ...definitions.specification.assertions } };
 
-	const compilePrincipalFn: CreateIsSatisfiedParseFn = makePolicySchemeValueParser(definitions.principals);
-	const compileActionFn: CreateIsSatisfiedParseFn = makePolicySchemeValueParser(definitions.actions);
-	const compileResourceFn: CreateIsSatisfiedParseFn = makePolicySchemeValueParser(definitions.resources);
+	const compilePrincipalFn: CreatePolicyFilterFn = createPolicyFilterValueParser(definitions.principals);
+	const compileActionFn: CreatePolicyFilterFn = createPolicyFilterValueParser(definitions.actions);
+	const compileResourceFn: CreatePolicyFilterFn = createPolicyFilterValueParser(definitions.resources);
 	const compileArrayAssertionsFn: CompileArrayAssertionsFn = makeCompileArrayAssertions(arrayAssertions);
 	const compileAssertionsFn: CompileSpecificationsFn = makeCompileAssertions(assertions);
 	const compileSpecificationFn: CompileSpecificationsFn = makeCompileSpecification(compileArrayAssertionsFn, compileAssertionsFn);

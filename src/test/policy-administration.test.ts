@@ -1,48 +1,42 @@
 import { assert } from 'chai';
 import { DefaultAllowPrincipalPolicy, DefaultAllowResourcePolicy } from './fixtures/test-data';
 import { isSatisfiedByTrueFn, merge } from '../app/helpers';
-import { CreateIsSatisfiedParseFn, makePolicySchemeValueParser } from '../app/policy/parser';
+import { CreatePolicyFilterFn, createPolicyFilterValueParser } from '../app/policy/parser';
 import { IAccessRequest } from '../app/access-request';
-import { IIsPolicyMatchFn, IIsSatisfiedByResult, IPolicy, makeCompilePolicy } from '../app/policy';
+import { IsPolicyMatchFn, IIsSatisfiedByResult, IPolicy, makeCompilePolicy } from '../app/policy';
 import { CompileSpecificationsFn, SpecificationMatchFn } from '../app/policy/specification';
 
-describe('#makeParsePolicyPrincipalValue returns a function that matches the principal of a policy to an access request', () => {
-  it('returns an IIsSatisfiedByFn that returns false if the policy does not contain a principal', () => {
-    const sut = makePolicySchemeValueParser([]);
+describe('#makePolicyFilterValueParser returns a function that filters policies to an access request', () => {
+  it('returns an IIsSatisfiedByFn that returns false if the policy value is undefined', () => {
+    const sut = createPolicyFilterValueParser({});
     const result = sut(undefined)(<IAccessRequest>{});
     assert.equal(result.result, false, 'Expected the access request to return a false result');
   });
   it('returns an IIsSatisfiedByFn that returns true if the policy contains a wild card for principal', () => {
-    const sut = makePolicySchemeValueParser([]);
+    const sut = createPolicyFilterValueParser({});
     const result = sut('*')(<IAccessRequest>{});
     assert.equal(result.result, true, 'Expected the access request to return a true result');
   });
   it('returns an IIsSatisfiedByFn that returns true if the policy contains an array for principal', () => {
-    const sut = makePolicySchemeValueParser([]);
+    const sut = createPolicyFilterValueParser({});
     const result = sut(['*'])(<IAccessRequest>{});
     assert.equal(result.result, true, 'Expected the access request to return a true result');
   });
   it('it throws an exception if a matching principal policy parser is not found', () => {
-    const itThrows = () => makePolicySchemeValueParser([
-      {
-        scheme: 'userid',
-        matchFn: (value: string) => isSatisfiedByTrueFn
-      },
-    ])('clientid:test');
+    const itThrows = () => createPolicyFilterValueParser({
+			userid: (value: string | string[]) => isSatisfiedByTrueFn
+		})('clientid:test');
     assert.throws(itThrows, 'Unable to match a scheme assertion matcher for scheme "clientid"');
   });
   it('it returns an IIsSatisfiedByFn if a matching principal policy parser is found', () => {
-    const sut = makePolicySchemeValueParser([
-      {
-        scheme: 'test',
-        matchFn: (value: string) => isSatisfiedByTrueFn
-      },
-    ])('test:test');
+    const sut = createPolicyFilterValueParser({
+			test: (value: string) => isSatisfiedByTrueFn
+    })('test:test');
     assert.isFunction(sut, 'Expected a function');
     assert.isTrue(sut(<IAccessRequest><unknown>{}).result, 'Expected a true result');
   });
-  it('returns an IIsSatisfiedByFn that returns true if the policy contains an array for principal with matching parser', () => {
-    const sut = makePolicySchemeValueParser([]);
+  it('returns an IIsSatisfiedByFn that returns true if the policy contains an array with wildcards', () => {
+    const sut = createPolicyFilterValueParser({});
     const result = sut(['*'])(<IAccessRequest>{});
     assert.isFunction(sut, 'Expected a function');
     assert.equal(result.result, true, 'Expected the access request to return a true result');
@@ -52,9 +46,9 @@ describe('#makeParsePolicyPrincipalValue returns a function that matches the pri
 describe('compiling a policy', () => {
   // these functions allow us to inject a mock result that is returned to the calling
   // function..
-  const _compilePrincipal = (result?:IIsSatisfiedByResult): CreateIsSatisfiedParseFn => (value:any):IIsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
-  const _compileAction = (result?:IIsSatisfiedByResult): CreateIsSatisfiedParseFn => (value:any):IIsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
-  const _compileResource = (result?:IIsSatisfiedByResult): CreateIsSatisfiedParseFn => (value:any):IIsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
+  const _compilePrincipal = (result?:IIsSatisfiedByResult): CreatePolicyFilterFn => (value:any):IsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
+  const _compileAction = (result?:IIsSatisfiedByResult): CreatePolicyFilterFn => (value:any):IsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
+  const _compileResource = (result?:IIsSatisfiedByResult): CreatePolicyFilterFn => (value:any):IsPolicyMatchFn => (accessRequest:IAccessRequest):IIsSatisfiedByResult => result;
   const _compileSpecification = (result?:boolean):CompileSpecificationsFn => (value:any):SpecificationMatchFn => (accessRequest:IAccessRequest):boolean => result;
   it('throws an error if policy is undefined', () => {
     const mockCompilePrincipal = _compilePrincipal();

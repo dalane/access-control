@@ -1,3 +1,1 @@
-module.exports.createLogoutView = accessResponse => {
-
-};
+module.exports.createLogoutView = () => 'handling the logout path...';
