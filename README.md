@@ -1,4 +1,4 @@
-# Attribute Based Access Control libary for your Node.js apps
+# Attribute Based Access Control library for your Node.js apps
 
 This package allows you to start with a basic implementation of Attribute Based
 Access Control (ABAC) in a node application. It is written using TypeScript so

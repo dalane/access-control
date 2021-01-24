@@ -19,6 +19,17 @@ Policies contain the access rules for determining if a user has access to a reso
 They determine which attributes in the Access Request will result in an ```Allow```
 or ```Deny``` decision.
 
+Policies are matched to an Access Request using the ```action```, ```resource```
+and ```principal``` parameters. This is known as the Policy Set.
+
+The ```specification``` parameter contains the
+[assertions](https://github.com/dalane/access-control/tree/master/readme/assertions.md)
+to determine if the Access Request satisifies the policy. Given an Access Request
+this returns ```true``` or ```false```.
+
+The ```effect``` parameters indicates the decision if the policy
+specification is ```true```.
+
 They can be JSON files or plain javascript objects. An example of a JSON policy
 is below.
 
@@ -68,7 +79,8 @@ is below.
 ```
 
 There is an exported helper function ```loadJsonPolicyFiles``` for loading and
-parsing these json files. By default it searches for files with the extension ```.policy.json```.
+parsing these json files. By default it searches for files with the extension ```.policy.json```. You can specify your own glob pattern as the second argument if
+you want to use a different file extension.
 
 ```typescript
 import { loadJsonPolicyFiles, IPolicy[] } from '@dalane/access-control';
@@ -145,8 +157,20 @@ resource. The request to access a resource is defined using an access request. T
 policy decision point will match the access request to the policies returning an
 access response with the PDP's decision.
 
-This decision will indicate either an ALLOW decision or a DENY decision. If the PDP
-is unable to match a policy to the request then a NOT-APPLICABLE decision will be returned.
+This decision will indicate either an ```ALLOW``` decision or a ```DENY```
+decision. If the PDP is unable to match a policy to the request then a
+```NOT-APPLICABLE``` decision will be returned.
+
+All policy decisions in a Policy Set must return ```ALLOW``` for an ```ALLOW```
+decision by the Policy Decision Point. The table below describes the decision of
+each policy based on the ```effect``` and ```specification```.
+
+| Effect | Specification | Decision
+| --- | ---    | ---           | ---
+| ```ALLOW``` | ```true``` | ```ALLOW```
+| ```ALLOW``` | ```false``` | ```DENY```
+| ```DENY``` | ```true``` | ```DENY```
+| ```DENY``` | ```false``` | ```ALLOW```
 
 The policy decision point is created using the ```createPolicyDecisionPointFn```
 function. It uses function composition to return a function with the type ```PolicyDecisionPointFn``` and requires the Policy Administration Point function.
